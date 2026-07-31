@@ -15,6 +15,15 @@
   font-size: 14px;
 }
 
+.dropZone {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.12s ease;
+}
+
 .panelContent {
   flex: 1;
   overflow-y: auto;
@@ -158,6 +167,47 @@
 
 .danger:hover {
   background: #fee2e2;
+}
+
+.dropActive {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.dropActive::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px dashed #f9a8b8;
+  border-radius: 12px;
+  pointer-events: none;
+  z-index: 11;
+  animation: dropBorderFadeIn 0.12s ease forwards;
+}
+
+@keyframes dropBorderFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.dropHint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(254, 242, 242, 0.85);
+  backdrop-filter: blur(1px);
+  font-size: 14px;
+  font-weight: 600;
+  color: #e05575;
+  z-index: 10;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.dropHintVisible {
+  opacity: 1;
 }
 
 .emptyState {

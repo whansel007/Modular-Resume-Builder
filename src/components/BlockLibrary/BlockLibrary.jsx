@@ -1,8 +1,10 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { BLOCK_SCHEMA, SECTION_TYPES } from '../../utils/constants';
+import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './BlockLibrary.module.css';
 
-export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBlock }) {
+export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBlock, onRemoveBlockFromResume = () => {}, isCanvasBlockDragging = false, onCanvasDragEnd }) {
+  const dragOver = isCanvasBlockDragging;
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('all');
   const [jobTypeModes, setJobTypeModes] = useState({});
@@ -44,8 +46,8 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
   const clearFilters = () => setJobTypeModes({});
 
   const handleDragStart = (e, blockId) => {
-    e.dataTransfer.setData('application/x-block-id', blockId);
-    e.dataTransfer.setData('application/x-drag-source', 'library');
+    e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
+    e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.LIBRARY);
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add(styles.dragging);
   };
@@ -54,12 +56,42 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
     e.currentTarget.classList.remove(styles.dragging);
   };
 
+  const handleDropZoneDragOver = useCallback((e) => {
+    // Allow drop from canvas blocks
+    if (Array.from(e.dataTransfer.types).includes(DRAG_KEYS.SOURCE_SECTION)) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+  }, []);
+
+  const handleDropZoneDrop = useCallback((e) => {
+    e.preventDefault();
+    const blockId = e.dataTransfer.getData(DRAG_KEYS.BLOCK_ID);
+    const sourceSection = e.dataTransfer.getData(DRAG_KEYS.SOURCE_SECTION);
+    const sourceIndex = Number(e.dataTransfer.getData(DRAG_KEYS.SOURCE_INDEX));
+    if (blockId && sourceSection && Number.isInteger(sourceIndex) && sourceIndex >= 0) {
+      onRemoveBlockFromResume(sourceSection, sourceIndex);
+    }
+    // The source element may be unmounted before its `dragend` fires,
+    // so explicitly clear the drag state here.
+    onCanvasDragEnd?.();
+  }, [onRemoveBlockFromResume, onCanvasDragEnd]);
+
   const isFilterActive = includedJobTypes.length > 0 || requiredJobTypes.length > 0;
 
   return (
-    <aside className={styles.panel} data-print-hide>
+    <aside
+      className={styles.panel}
+      data-print-hide
+    >
       <div className={styles.panelHeader}>Block Library</div>
-      <div className={styles.panelContent}>
+      <div
+        className={`${styles.dropZone} ${dragOver ? styles.dropActive : ''}`}
+        onDragOver={handleDropZoneDragOver}
+        onDrop={handleDropZoneDrop}
+      >
+        <div className={`${styles.dropHint} ${dragOver ? styles.dropHintVisible : ''}`}>Drop here to remove from resume</div>
+        <div className={styles.panelContent}>
         <div className={styles.toolbar}>
           <div className={styles.field}>
             <label htmlFor="section-select">Section</label>
@@ -154,6 +186,7 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
               </div>
             );
           })}
+        </div>
         </div>
       </div>
     </aside>

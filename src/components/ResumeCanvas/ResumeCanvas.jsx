@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { BLOCK_SCHEMA, TEMPLATES } from '../../utils/constants';
+import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import ResumeBlock from './ResumeBlock';
 import styles from './ResumeCanvas.module.css';
 
@@ -16,6 +17,8 @@ export default function ResumeCanvas({
   onReorderInCanvas,
   onRemoveBlockFromSection,
   onEditBlock,
+  onCanvasDragStart = () => {},
+  onCanvasDragEnd = () => {},
 }) {
   const [dragOverSection, setDragOverSection] = useState(null);
 
@@ -38,19 +41,19 @@ export default function ResumeCanvas({
       e.preventDefault();
       setDragOverSection(null);
 
-      const blockId = e.dataTransfer.getData('application/x-block-id');
-      const source = e.dataTransfer.getData('application/x-drag-source');
+      const blockId = e.dataTransfer.getData(DRAG_KEYS.BLOCK_ID);
+      const source = e.dataTransfer.getData(DRAG_KEYS.SOURCE);
 
       if (!blockId) return;
 
       const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
       const insertIndex = afterElement ? Number(afterElement.dataset.idx) : null;
 
-      if (source === 'library') {
+      if (source === DRAG_SOURCE.LIBRARY) {
         onDropFromLibrary(blockId, sectionId, insertIndex);
-      } else if (source === 'canvas') {
-        const sourceSectionId = e.dataTransfer.getData('application/x-source-section');
-        const sourceIndex = Number(e.dataTransfer.getData('application/x-source-index'));
+      } else if (source === DRAG_SOURCE.CANVAS) {
+        const sourceSectionId = e.dataTransfer.getData(DRAG_KEYS.SOURCE_SECTION);
+        const sourceIndex = Number(e.dataTransfer.getData(DRAG_KEYS.SOURCE_INDEX));
         onReorderInCanvas(sourceSectionId, sourceIndex, sectionId, insertIndex ?? 999);
       }
     },
@@ -139,6 +142,8 @@ export default function ResumeCanvas({
                     onRemove={() => onRemoveBlockFromSection(section.id, idx)}
                     onEdit={() => onEditBlock(blockId)}
                     formatBody={formatBody}
+                    onCanvasDragStart={onCanvasDragStart}
+                    onCanvasDragEnd={onCanvasDragEnd}
                   />
                 );
               })}

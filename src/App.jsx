@@ -25,8 +25,12 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBlockId, setEditingBlockId] = useState(null);
   const [tempBlock, setTempBlock] = useState({ type: 'summary', content: {}, jobTypes: [] });
+  const [isCanvasBlockDragging, setIsCanvasBlockDragging] = useState(false);
 
   const exportPdf = useExportPdf();
+
+  const handleCanvasDragStart = useCallback(() => setIsCanvasBlockDragging(true), []);
+  const handleCanvasDragEnd = useCallback(() => setIsCanvasBlockDragging(false), []);
 
   // Migrate old single-field `contact` schema to separate email/phone/location
   useEffect(() => {
@@ -184,15 +188,22 @@ export default function App() {
   }, [setResume]);
 
   const removeBlockFromSection = useCallback((sectionId, index) => {
-    setResume((prev) => ({
-      ...prev,
-      sections: prev.sections.map((s) => {
-        if (s.id !== sectionId) return s;
-        const newIds = [...s.blockIds];
-        newIds.splice(index, 1);
-        return { ...s, blockIds: newIds };
-      }),
-    }));
+    setResume((prev) => {
+      const section = prev.sections.find((s) => s.id === sectionId);
+      if (!section) return prev;
+      if (!Number.isInteger(index) || index < 0 || index >= section.blockIds.length) {
+        return prev;
+      }
+      return {
+        ...prev,
+        sections: prev.sections.map((s) => {
+          if (s.id !== sectionId) return s;
+          const newIds = [...s.blockIds];
+          newIds.splice(index, 1);
+          return { ...s, blockIds: newIds };
+        }),
+      };
+    });
   }, [setResume]);
 
   return (
@@ -211,6 +222,9 @@ export default function App() {
           jobTypes={jobTypes}
           onEditBlock={openEditBlockModal}
           onDeleteBlock={deleteBlock}
+          onRemoveBlockFromResume={removeBlockFromSection}
+          isCanvasBlockDragging={isCanvasBlockDragging}
+          onCanvasDragEnd={handleCanvasDragEnd}
         />
 
         <ResumeCanvas
@@ -226,6 +240,8 @@ export default function App() {
           onReorderInCanvas={handleReorderInCanvas}
           onRemoveBlockFromSection={removeBlockFromSection}
           onEditBlock={openEditBlockModal}
+          onCanvasDragStart={handleCanvasDragStart}
+          onCanvasDragEnd={handleCanvasDragEnd}
         />
 
         <PropertiesPanel
