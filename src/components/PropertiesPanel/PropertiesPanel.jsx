@@ -3,7 +3,7 @@ import styles from './PropertiesPanel.module.css';
 
 export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, onUpdatePersonalInfo }) {
   return (
-    <aside className={styles.panel}>
+    <aside className={styles.panel} data-print-hide>
       <div className={styles.panelHeader}>Properties</div>
       <div className={styles.panelContent}>
         <label>Template</label>

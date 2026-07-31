@@ -70,7 +70,7 @@ export default function ResumeCanvas({
 
   return (
     <main className={styles.panel}>
-      <div className={styles.canvasHeader}>
+      <div className={styles.canvasHeader} data-print-hide>
         <input
           className={styles.canvasTitle}
           value={resume.title}
@@ -107,7 +107,7 @@ export default function ResumeCanvas({
                   value={section.title}
                   onChange={(e) => onUpdateSectionTitle(section.id, e.target.value)}
                 />
-                <div className={styles.sectionActions}>
+                <div className={styles.sectionActions} data-print-hide>
                   <button
                     className={styles.iconBtn}
                     onClick={() => onRemoveSection(section.id)}
@@ -119,7 +119,7 @@ export default function ResumeCanvas({
               </div>
 
               {section.blockIds.length === 0 && (
-                <div className={styles.dropHint}>Drag blocks here</div>
+                <div className={styles.dropHint} data-print-hide>Drag blocks here</div>
               )}
 
               {section.blockIds.map((blockId, idx) => {
@@ -145,7 +145,7 @@ export default function ResumeCanvas({
             </div>
           ))}
 
-          <button className={styles.addSection} onClick={onAddSection}>
+          <button className={styles.addSection} onClick={onAddSection} data-print-hide>
             + Add Section
           </button>
         </div>

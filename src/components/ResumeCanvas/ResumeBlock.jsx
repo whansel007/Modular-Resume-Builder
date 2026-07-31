@@ -25,7 +25,7 @@ export default function ResumeBlock({ blockId, sectionId, index, rendered, onRem
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={styles.blockActions}>
+      <div className={styles.blockActions} data-print-hide>
         <button className={styles.iconBtn} onClick={onEdit} title="Edit">
           &#9998;
         </button>

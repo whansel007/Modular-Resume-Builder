@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useExportPdf } from './hooks/useExportPdf';
 import {
@@ -27,6 +27,22 @@ export default function App() {
   const [tempBlock, setTempBlock] = useState({ type: 'summary', content: {}, jobTypes: [] });
 
   const exportPdf = useExportPdf();
+
+  // Migrate old single-field `contact` schema to separate email/phone/location
+  useEffect(() => {
+    if (personalInfo.contact && !personalInfo.email) {
+      const parts = personalInfo.contact.split(' · ').map((s) => s.trim());
+      setPersonalInfo((prev) => {
+        const { contact, ...rest } = prev;
+        return {
+          ...rest,
+          email: parts[0] || '',
+          phone: parts[2] || parts[1] || '',
+          location: parts[2] ? parts[1] : '',
+        };
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ---------- Block CRUD ----------
 
@@ -181,7 +197,7 @@ export default function App() {
 
   return (
     <div className={styles.app}>
-      <header className={styles.header}>
+      <header className={styles.header} data-print-hide>
         <h1 className={styles.headerTitle}>Modular Resume Builder</h1>
         <div className={styles.headerActions}>
           <button onClick={exportPdf}>Export PDF</button>

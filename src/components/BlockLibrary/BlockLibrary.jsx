@@ -57,7 +57,7 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
   const isFilterActive = includedJobTypes.length > 0 || requiredJobTypes.length > 0;
 
   return (
-    <aside className={styles.panel}>
+    <aside className={styles.panel} data-print-hide>
       <div className={styles.panelHeader}>Block Library</div>
       <div className={styles.panelContent}>
         <div className={styles.toolbar}>
