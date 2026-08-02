@@ -1,17 +1,20 @@
+import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, sectionId, index, rendered, onRemove, onEdit, formatBody }) {
+export default function ResumeBlock({ blockId, sectionId, index, rendered, onRemove, onEdit, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
   const handleDragStart = (e) => {
-    e.dataTransfer.setData('application/x-block-id', blockId);
-    e.dataTransfer.setData('application/x-drag-source', 'canvas');
-    e.dataTransfer.setData('application/x-source-section', sectionId);
-    e.dataTransfer.setData('application/x-source-index', String(index));
+    e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
+    e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
+    e.dataTransfer.setData(DRAG_KEYS.SOURCE_SECTION, sectionId);
+    e.dataTransfer.setData(DRAG_KEYS.SOURCE_INDEX, String(index));
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add(styles.dragging);
+    onCanvasDragStart?.();
   };
 
   const handleDragEnd = (e) => {
     e.currentTarget.classList.remove(styles.dragging);
+    onCanvasDragEnd?.();
   };
 
   return (
