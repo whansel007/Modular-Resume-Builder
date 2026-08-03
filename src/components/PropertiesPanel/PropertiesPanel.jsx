@@ -25,7 +25,7 @@ export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, o
           <input
             type="text"
             placeholder="Full name"
-            value={personalInfo.name}
+            value={personalInfo.name || ''}
             onChange={(e) => onUpdatePersonalInfo('name', e.target.value)}
           />
         </div>
@@ -33,7 +33,7 @@ export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, o
           <input
             type="email"
             placeholder="Email"
-            value={personalInfo.email}
+            value={personalInfo.email || ''}
             onChange={(e) => onUpdatePersonalInfo('email', e.target.value)}
           />
         </div>
@@ -41,7 +41,7 @@ export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, o
           <input
             type="tel"
             placeholder="Phone"
-            value={personalInfo.phone}
+            value={personalInfo.phone || ''}
             onChange={(e) => onUpdatePersonalInfo('phone', e.target.value)}
           />
         </div>
@@ -49,7 +49,7 @@ export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, o
           <input
             type="text"
             placeholder="Location"
-            value={personalInfo.location}
+            value={personalInfo.location || ''}
             onChange={(e) => onUpdatePersonalInfo('location', e.target.value)}
           />
         </div>

@@ -1,15 +1,23 @@
-export const DEFAULT_JOB_TYPES = [
-  'Software Development',
-  'Management',
-  'Technical Skills',
-  'Design',
-  'Product Management',
-  'Data Science',
-  'Marketing',
-  'Sales',
-  'Operations',
-  'Research',
-];
+// Default job types dictionary: { id: name }
+// New users get these seeded on first login
+export const DEFAULT_JOB_TYPES_MAP = {
+  jt1: 'Software Development',
+  jt2: 'Management',
+  jt3: 'Technical Skills',
+  jt4: 'Design',
+  jt5: 'Product Management',
+  jt6: 'Data Science',
+  jt7: 'Marketing',
+  jt8: 'Sales',
+  jt9: 'Operations',
+  jt10: 'Research',
+};
+
+// Legacy array for backwards compatibility (will be removed after migration)
+export const DEFAULT_JOB_TYPES = Object.values(DEFAULT_JOB_TYPES_MAP);
+
+// Owner identifier — will be replaced by real auth later
+export const DEFAULT_OWNER = 'kit@catship.nya';
 
 export const SECTION_TYPES = [
   { key: 'summary', label: 'Summary' },
@@ -26,8 +34,8 @@ export const BLOCK_SCHEMA = {
       { name: 'body', label: 'Summary', type: 'textarea' },
     ],
     render: (b) => ({
-      title: b.content.headline || 'Professional Summary',
-      body: b.content.body || '',
+      title: b.headline || 'Professional Summary',
+      body: b.body || '',
     }),
   },
   experience: {
@@ -41,10 +49,10 @@ export const BLOCK_SCHEMA = {
       { name: 'description', label: 'Description', type: 'textarea' },
     ],
     render: (b) => ({
-      title: b.content.role || 'Role',
-      subtitle: `${b.content.company || ''}${b.content.company && b.content.location ? ' — ' : ''}${b.content.location || ''}`,
-      dates: `${b.content.startDate || ''}${b.content.startDate && b.content.endDate ? ' – ' : ''}${b.content.endDate || ''}`,
-      body: b.content.description || '',
+      title: b.role || 'Role',
+      subtitle: `${b.company || ''}${b.company && b.location ? ' — ' : ''}${b.location || ''}`,
+      dates: `${b.startDate || ''}${b.startDate && b.endDate ? ' – ' : ''}${b.endDate || ''}`,
+      body: b.description || '',
     }),
   },
   education: {
@@ -58,10 +66,10 @@ export const BLOCK_SCHEMA = {
       { name: 'gpa', label: 'GPA / Honors', type: 'text' },
     ],
     render: (b) => ({
-      title: b.content.institution || 'Institution',
-      subtitle: `${b.content.degree || ''}${b.content.degree && b.content.field ? ', ' : ''}${b.content.field || ''}`,
-      dates: `${b.content.startDate || ''}${b.content.startDate && b.content.endDate ? ' – ' : ''}${b.content.endDate || ''}`,
-      body: b.content.gpa || '',
+      title: b.institution || 'Institution',
+      subtitle: `${b.degree || ''}${b.degree && b.field ? ', ' : ''}${b.field || ''}`,
+      dates: `${b.startDate || ''}${b.startDate && b.endDate ? ' – ' : ''}${b.endDate || ''}`,
+      body: b.gpa || '',
     }),
   },
   skills: {
@@ -71,8 +79,8 @@ export const BLOCK_SCHEMA = {
       { name: 'skills', label: 'Skills (comma separated)', type: 'textarea' },
     ],
     render: (b) => ({
-      title: b.content.category || 'Skills',
-      body: b.content.skills || '',
+      title: b.category || 'Skills',
+      body: b.skills || '',
     }),
   },
 };
@@ -85,89 +93,106 @@ export const TEMPLATES = {
   },
   classic: {
     name: 'Classic Professional',
-    description: 'A traditional serif layout with centered header.',
+    description: 'A traditional serif layout with a centered header.',
     className: 'template-classic',
   },
 };
 
+// Blocks are flat JSON objects — owner + id + type + jobTypeIds + content fields at top level
+// jobTypeIds reference the user's jobTypes dictionary
 export const INITIAL_BLOCKS = [
   {
     id: 'b1',
+    owner: DEFAULT_OWNER,
     type: 'summary',
-    jobTypes: ['Software Development', 'Management'],
-    content: {
-      headline: 'Senior Software Engineer',
-      body: 'Results-driven engineer with 8+ years of experience building scalable web applications and leading cross-functional teams.',
-    },
+    jobTypeIds: ['jt1', 'jt2'],
+    headline: 'Senior Software Engineer',
+    body: 'Results-driven engineer with 8+ years of experience building scalable web applications and leading cross-functional teams.',
   },
   {
     id: 'b2',
+    owner: DEFAULT_OWNER,
     type: 'experience',
-    jobTypes: ['Software Development'],
-    content: {
-      company: 'TechCorp',
-      role: 'Senior Software Engineer',
-      location: 'San Francisco, CA',
-      startDate: '2020',
-      endDate: 'Present',
-      description: 'Lead backend architecture for a high-traffic SaaS platform. Mentor junior engineers and drive CI/CD best practices.',
-    },
+    jobTypeIds: ['jt1'],
+    company: 'TechCorp',
+    role: 'Senior Software Engineer',
+    location: 'San Francisco, CA',
+    startDate: '2020',
+    endDate: 'Present',
+    description: 'Lead backend architecture for a high-traffic SaaS platform. Mentor junior engineers and drive CI/CD best practices.',
   },
   {
     id: 'b3',
+    owner: DEFAULT_OWNER,
     type: 'experience',
-    jobTypes: ['Management'],
-    content: {
-      company: 'StartupXYZ',
-      role: 'Engineering Manager',
-      location: 'Remote',
-      startDate: '2017',
-      endDate: '2020',
-      description: 'Managed a team of 10 engineers across two product squads. Improved delivery predictability by 40%.',
-    },
+    jobTypeIds: ['jt2'],
+    company: 'StartupXYZ',
+    role: 'Engineering Manager',
+    location: 'Remote',
+    startDate: '2017',
+    endDate: '2020',
+    description: 'Managed a team of 10 engineers across two product squads. Improved delivery predictability by 40%.',
   },
   {
     id: 'b4',
+    owner: DEFAULT_OWNER,
     type: 'education',
-    jobTypes: ['Software Development', 'Data Science'],
-    content: {
-      institution: 'State University',
-      degree: 'Bachelor of Science',
-      field: 'Computer Science',
-      startDate: '2012',
-      endDate: '2016',
-      gpa: 'GPA: 3.8 / 4.0',
-    },
+    jobTypeIds: ['jt1', 'jt6'],
+    institution: 'State University',
+    degree: 'Bachelor of Science',
+    field: 'Computer Science',
+    startDate: '2012',
+    endDate: '2016',
+    gpa: 'GPA: 3.8 / 4.0',
   },
   {
     id: 'b5',
+    owner: DEFAULT_OWNER,
     type: 'skills',
-    jobTypes: ['Technical Skills', 'Software Development'],
-    content: {
-      category: 'Technical Skills',
-      skills: 'JavaScript, TypeScript, React, Node.js, Python, SQL, AWS, Docker',
-    },
+    jobTypeIds: ['jt3', 'jt1'],
+    category: 'Technical Skills',
+    skills: 'JavaScript, TypeScript, React, Node.js, Python, SQL, AWS, Docker',
   },
 ];
 
+// Resume is a self-contained JSON object: owner + personalInfo + section keys (block ID arrays).
+// sectionOrder preserves display order.
 export const INITIAL_RESUME = {
   id: 'r1',
+  owner: DEFAULT_OWNER,
   title: 'My Resume',
   templateId: 'modern',
-  sections: [
-    { id: 's1', title: 'Summary', blockIds: ['b1'] },
-    { id: 's2', title: 'Experience', blockIds: ['b2', 'b3'] },
-    { id: 's3', title: 'Education', blockIds: ['b4'] },
-    { id: 's4', title: 'Skills', blockIds: ['b5'] },
-  ],
+  personalInfo: {
+    name: 'Your Name',
+    email: 'your.email@example.com',
+    phone: '(123) 456-7890',
+    location: 'City, Country',
+  },
+  sectionOrder: ['Summary', 'Experience', 'Education', 'Skills'],
+  sections: {
+    Summary: ['b1'],
+    Experience: ['b2', 'b3'],
+    Education: ['b4'],
+    Skills: ['b5'],
+  },
 };
 
-export const INITIAL_PERSONAL_INFO = {
-  name: 'Your Name',
-  email: 'your.email@example.com',
-  phone: '(123) 456-7890',
-  location: 'City, Country',
+export const BLANK_RESUME = {
+  id: 'r1',
+  owner: DEFAULT_OWNER,
+  title: 'Untitled Resume',
+  templateId: 'modern',
+  personalInfo: {
+    name: '',
+    email: '',
+    phone: '',
+    location: '',
+  },
+  sectionOrder: [],
+  sections: {},
 };
+
+export const BLANK_BLOCKS = [];
 
 export const SECTION_NAME_SUGGESTIONS = [
   'Summary',
