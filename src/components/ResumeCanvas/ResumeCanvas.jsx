@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { BLOCK_SCHEMA, TEMPLATES } from '../../utils/constants';
+import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import ResumeBlock from './ResumeBlock';
 import styles from './ResumeCanvas.module.css';
 
@@ -16,6 +17,8 @@ export default function ResumeCanvas({
   onReorderInCanvas,
   onRemoveBlockFromSection,
   onEditBlock,
+  onCanvasDragStart = () => {},
+  onCanvasDragEnd = () => {},
 }) {
   const [dragOverSection, setDragOverSection] = useState(null);
 
@@ -40,8 +43,8 @@ export default function ResumeCanvas({
       e.preventDefault();
       setDragOverSection(null);
 
-      const blockId = e.dataTransfer.getData('application/x-block-id');
-      const source = e.dataTransfer.getData('application/x-drag-source');
+      const blockId = e.dataTransfer.getData(DRAG_KEYS.BLOCK_ID);
+      const source = e.dataTransfer.getData(DRAG_KEYS.SOURCE);
 
       if (!blockId) return;
 

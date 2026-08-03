@@ -455,6 +455,9 @@ export default function App() {
           jobTypes={jobTypes}
           onEditBlock={openEditBlockModal}
           onDeleteBlock={deleteBlock}
+          onRemoveBlockFromResume={removeBlockFromSection}
+          isCanvasBlockDragging={isCanvasBlockDragging}
+          onCanvasDragEnd={handleCanvasDragEnd}
         />
 
         <ResumeCanvas
@@ -470,6 +473,8 @@ export default function App() {
           onReorderInCanvas={handleReorderInCanvas}
           onRemoveBlockFromSection={removeBlockFromSection}
           onEditBlock={openEditBlockModal}
+          onCanvasDragStart={handleCanvasDragStart}
+          onCanvasDragEnd={handleCanvasDragEnd}
         />
 
         <PropertiesPanel
