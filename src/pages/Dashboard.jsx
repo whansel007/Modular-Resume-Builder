@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import BlockModal from '../components/BlockModal/BlockModal';
 import { BLOCK_SCHEMA, DEFAULT_JOB_TYPES_MAP, DEFAULT_OWNER } from '../utils/constants';
 import { generateId } from '../utils/id';
+import { prefetchBuilderData, invalidatePrefetch } from '../utils/prefetch';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
@@ -58,6 +59,9 @@ export default function Dashboard() {
       setResumes(resumesData);
       setBlocks(blocksData);
       setJobTypes(jobTypesData);
+
+      // Fresh dashboard data supersedes any hover-prefetched cache
+      invalidatePrefetch();
 
       // If user has no job types, seed defaults
       if (Object.keys(jobTypesData).length === 0) {
@@ -322,8 +326,16 @@ export default function Dashboard() {
           ) : (
             <div className={styles.cardGrid}>
               {resumes.map((resume) => (
-                <div key={resume._id} className={styles.card}>
-                  <Link to={`/builder?resume=${resume._id}`} className={styles.cardLink}>
+                <div
+                  key={resume._id}
+                  className={styles.card}
+                  onMouseEnter={prefetchBuilderData}
+                >
+                  <Link
+                    to={`/builder?resume=${resume._id}`}
+                    className={styles.cardLink}
+                    onFocus={prefetchBuilderData}
+                  >
                     <h3 className={styles.cardTitle}>{resume.title || 'Untitled Resume'}</h3>
                     <p className={styles.cardMeta}>
                       {resume.sectionOrder?.length || 0} sections · Updated{' '}

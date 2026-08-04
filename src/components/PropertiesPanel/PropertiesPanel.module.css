@@ -1,3 +1,5 @@
+/* ── Properties Panel · Pressroom ───────────────────────────── */
+
 .panel {
   width: 280px;
   flex-shrink: 0;
@@ -8,10 +10,15 @@
 }
 
 .panelHeader {
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  border-bottom: var(--border-w) solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
-  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--panel-2);
 }
 
 .panelContent {
@@ -24,26 +31,41 @@
   margin-top: 8px;
 }
 
+/* Template options: proof sheets */
 .templateOption {
-  border: 1px solid var(--border);
+  border: var(--border-w) solid var(--ink);
   border-radius: var(--radius);
   padding: 12px;
   margin-bottom: 10px;
   cursor: pointer;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 .templateOption:hover {
-  border-color: var(--primary);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
 }
 
 .selected {
-  border-color: var(--primary);
   background: var(--primary-light);
+  box-shadow: var(--shadow);
+}
+
+.selected h4::after {
+  content: ' ✓';
+  color: var(--primary);
 }
 
 .templateOption h4 {
   margin: 0 0 4px 0;
-  font-size: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink);
 }
 
 .templateOption p {

@@ -1,7 +1,7 @@
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, sectionId, index, rendered, onRemove, onEdit, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
+export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, onRemove, onEdit, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
     e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
@@ -22,6 +22,7 @@ export default function ResumeBlock({ blockId, sectionId, index, rendered, onRem
       className={styles.resumeBlock}
       draggable
       data-resume-block
+      data-block-type={blockType}
       data-block-id={blockId}
       data-section-id={sectionId}
       data-idx={index}

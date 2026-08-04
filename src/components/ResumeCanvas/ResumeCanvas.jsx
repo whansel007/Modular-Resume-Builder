@@ -140,6 +140,7 @@ export default function ResumeCanvas({
                     <ResumeBlock
                       key={`${sectionTitle}-${blockId}-${idx}`}
                       blockId={blockId}
+                      blockType={block.type}
                       sectionId={sectionTitle}
                       index={idx}
                       rendered={rendered}

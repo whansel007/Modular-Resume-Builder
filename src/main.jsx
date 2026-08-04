@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import App from './App';
+import './tokens.css';
 import './print.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(

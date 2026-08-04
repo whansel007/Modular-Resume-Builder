@@ -165,6 +165,7 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
               <div
                 key={block.id}
                 className={styles.blockCard}
+                data-block-type={block.type}
                 draggable
                 onDragStart={(e) => handleDragStart(e, block.id)}
                 onDragEnd={handleDragEnd}

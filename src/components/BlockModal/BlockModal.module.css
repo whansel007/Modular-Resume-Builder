@@ -1,34 +1,47 @@
+/* ── Block Modal · Pressroom ────────────────────────────────── */
+
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: rgba(29, 39, 51, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
+  padding: 20px;
 }
 
 .modal {
-  background: #fff;
+  background: var(--panel);
+  border: var(--border-w) solid var(--ink);
   border-radius: var(--radius);
   width: 560px;
   max-width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lift);
 }
 
 .modalHeader {
   padding: 16px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--border-w) solid var(--ink);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--panel-2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 .modalHeader h3 {
   margin: 0;
-  font-size: 16px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink);
 }
 
 .modalBody {
@@ -37,7 +50,7 @@
 
 .modalFooter {
   padding: 16px;
-  border-top: 1px solid var(--border);
+  border-top: var(--border-w) solid var(--ink);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -46,10 +59,18 @@
 .closeBtn {
   background: transparent;
   border: none;
+  box-shadow: none;
   font-size: 20px;
   padding: 0 4px;
   line-height: 1;
   cursor: pointer;
+  color: var(--ink);
+}
+
+.closeBtn:hover {
+  color: var(--danger);
+  transform: none;
+  box-shadow: none;
 }
 
 .field {
@@ -67,14 +88,22 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  border: 1.5px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
-  background: #e5e7eb;
-  color: var(--text);
+  letter-spacing: 0.03em;
+  background: var(--panel);
+  color: var(--ink);
   cursor: pointer;
   user-select: none;
+  transition: background 0.12s, color 0.12s;
+}
+
+.tag:hover {
+  background: var(--panel-2);
 }
 
 .active {
@@ -83,17 +112,18 @@
 }
 
 .addBtn {
-  padding: 5px 8px;
-  font-size: 12px;
+  padding: 5px 9px;
+  font-size: 10px;
   margin-top: 6px;
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 .primaryBtn {
   background: var(--primary);
   color: #fff;
-  border-color: var(--primary);
+  border-color: var(--ink);
 }
 
 .primaryBtn:hover {
-  background: #1d4ed8;
+  background: var(--primary-deep);
 }

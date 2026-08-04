@@ -1,44 +1,38 @@
-:root {
-  --bg: #f4f6f8;
-  --panel: #ffffff;
-  --border: #d1d5db;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --primary: #2563eb;
-  --primary-light: #dbeafe;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --radius: 8px;
-}
-
-* {
-  box-sizing: border-box;
-}
+/* ── Builder chrome · Pressroom ─────────────────────────────── */
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text);
   height: 100vh;
   overflow: hidden;
 }
 
+/* Default control: paper sheet with ink keyline + hard shadow */
 button {
   cursor: pointer;
-  border: 1px solid var(--border);
-  background: #fff;
-  color: var(--text);
+  border: var(--border-w) solid var(--ink);
+  background: var(--panel);
+  color: var(--ink);
   border-radius: var(--radius);
   padding: 8px 12px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.15s;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 button:hover {
-  background: #f9fafb;
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+
+button:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 input,
@@ -46,11 +40,21 @@ select,
 textarea {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--border);
+  border: var(--border-w) solid var(--ink);
   border-radius: var(--radius);
+  background: #fff;
   font-size: 13px;
-  font-family: inherit;
+  font-family: var(--font-body);
+  color: var(--text);
   margin-top: 4px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 3px 3px 0 var(--primary);
 }
 
 textarea {
@@ -60,15 +64,18 @@ textarea {
 
 label {
   display: block;
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   color: var(--muted);
   margin-top: 12px;
 }
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
@@ -76,29 +83,33 @@ label {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: var(--ink);
+  border-radius: 0;
+  border: 2px solid var(--bg);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--primary);
 }
 
+/* ── Frame ── */
 .app {
   display: flex;
   flex-direction: column;
   height: 100vh;
 }
 
+/* Ink header with registration-mark signature */
 .header {
-  height: 56px;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  height: 60px;
+  background: var(--ink);
+  border-bottom: var(--border-w) solid var(--ink);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 18px;
   flex-shrink: 0;
+  color: var(--panel);
 }
 
 .headerLeft {
@@ -110,53 +121,66 @@ label {
 }
 
 .backBtn {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
   padding: 0;
   flex-shrink: 0;
+  background: var(--panel);
 }
 
 .headerTitleInput {
-  font-size: 18px;
-  font-weight: 700;
-  border: 1px solid transparent;
+  font-family: var(--font-display);
+  font-size: 16px;
+  letter-spacing: 0.01em;
+  border: var(--border-w) dashed transparent;
   background: transparent;
+  color: var(--panel);
   padding: 4px 8px;
   border-radius: var(--radius);
   margin: 0;
   min-width: 0;
-  max-width: 300px;
-  transition: border-color 0.15s;
+  max-width: 320px;
+  box-shadow: none;
+  transition: border-color 0.15s, background 0.15s;
 }
 
 .headerTitleInput:hover {
-  border-color: var(--border);
+  border-color: rgba(253, 252, 247, 0.35);
 }
 
 .headerTitleInput:focus {
   outline: none;
-  border-color: var(--primary);
-  background: #fff;
+  border-color: var(--yellow);
+  border-style: solid;
+  background: rgba(253, 252, 247, 0.08);
+  color: var(--panel);
+  box-shadow: none;
+}
+
+.headerTitleInput::placeholder {
+  color: rgba(253, 252, 247, 0.5);
 }
 
 .headerActions {
   display: flex;
   gap: 10px;
   flex-shrink: 0;
+  align-items: center;
 }
 
+/* Ink chips (mono labels) used in header/footer */
 .saveBtn {
-  background: var(--success) !important;
-  color: #fff !important;
-  border-color: var(--success) !important;
+  background: var(--yellow) !important;
+  color: var(--ink) !important;
+  border-color: var(--ink) !important;
 }
 
 .saveBtn:hover:not(:disabled) {
-  background: #15803d !important;
+  background: var(--yellow) !important;
 }
 
 .saveBtn:disabled {
@@ -167,13 +191,14 @@ label {
 .primary {
   background: var(--primary) !important;
   color: #fff !important;
-  border-color: var(--primary) !important;
+  border-color: var(--ink) !important;
 }
 
 .primary:hover {
-  background: #1d4ed8 !important;
+  background: var(--primary-deep) !important;
 }
 
+/* ── Body ── */
 .body {
   display: flex;
   flex: 1;
@@ -183,40 +208,68 @@ label {
 .rightPanel {
   width: 320px;
   background: var(--panel);
-  border-left: 1px solid var(--border);
+  border-left: var(--border-w) solid var(--ink);
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
 }
 
+@media (max-width: 1100px) {
+  .rightPanel {
+    width: 264px;
+  }
+}
+
+@media (max-width: 900px) {
+  .rightPanel {
+    width: 220px;
+  }
+}
+
 .tabBar {
   display: flex;
-  border-bottom: 1px solid var(--border);
-  background: #f9fafb;
+  border-bottom: var(--border-w) solid var(--ink);
+  background: var(--panel-2);
 }
 
 .tab {
   flex: 1;
   padding: 12px 16px;
   border: none;
+  border-right: var(--border-w) solid var(--ink);
+  border-radius: 0;
+  box-shadow: none;
   background: transparent;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
   color: var(--muted);
   cursor: pointer;
-  transition: all 0.15s;
-  border-bottom: 2px solid transparent;
+  transition: background 0.12s, color 0.12s;
+}
+
+.tab:last-child {
+  border-right: none;
 }
 
 .tab:hover {
-  background: #f3f4f6;
-  color: var(--text);
+  transform: none;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: none;
+}
+
+.tab:active {
+  transform: none;
+  box-shadow: none;
 }
 
 .activeTab {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
+  color: var(--ink);
   background: var(--panel);
+  box-shadow: inset 0 -4px 0 var(--pink);
 }
 
 .tabContent {

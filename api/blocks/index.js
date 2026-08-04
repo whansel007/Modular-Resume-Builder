@@ -1,6 +1,6 @@
-import { connectToDatabase } from '../lib/db.js';
-import Block from '../lib/models/Block.js';
-import { requireAuth } from '../lib/auth.js';
+import { connectToDatabase } from '../../api-lib/db.js';
+import Block from '../../api-lib/models/Block.js';
+import { requireAuth } from '../../api-lib/auth.js';
 
 export default async function handler(req, res) {
   try {

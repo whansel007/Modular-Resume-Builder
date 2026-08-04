@@ -12,6 +12,7 @@ import {
   DEFAULT_OWNER,
 } from './utils/constants';
 import { generateId } from './utils/id';
+import { getOrFetch } from './utils/prefetch';
 import BlockLibrary from './components/BlockLibrary/BlockLibrary';
 import ResumeCanvas from './components/ResumeCanvas/ResumeCanvas';
 import PropertiesPanel from './components/PropertiesPanel/PropertiesPanel';
@@ -54,8 +55,7 @@ export default function App() {
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
     const email = user?.email || DEFAULT_OWNER;
-    fetch('/api/user/jobtypes', { headers: getAuthHeaders() })
-      .then((res) => res.json())
+    getOrFetch('jobtypes', '/api/user/jobtypes')
       .then((data) => {
         if (Object.keys(data).length === 0) {
           // Seed defaults if user has no job types
@@ -88,12 +88,7 @@ export default function App() {
       
       // Fetch blocks from MongoDB for the authenticated user
       const email = user?.email || DEFAULT_OWNER;
-      fetch('/api/blocks', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
-        }
-      })
-        .then((res) => res.json())
+      getOrFetch('blocks', '/api/blocks')
         .then((blocks) => {
           // Flatten content fields for each block
           const flattened = blocks.map((b) => {
@@ -113,12 +108,9 @@ export default function App() {
     const resumeId = searchParams.get('resume');
     if (!resumeId) return;
 
-    const authToken = localStorage.getItem('auth-token');
-    const headers = { 'Authorization': `Bearer ${authToken}` };
-
-    // Fetch the specific resume
-    fetch('/api/resumes', { headers })
-      .then((res) => res.json())
+    // Uses the prefetch cache — if the card was hovered on the dashboard,
+    // these resolve instantly; otherwise they fetch as normal.
+    getOrFetch('resumes', '/api/resumes')
       .then((resumes) => {
         const found = resumes.find((r) => r._id === resumeId);
         if (found) {
@@ -128,9 +120,7 @@ export default function App() {
       })
       .catch((err) => console.error('Failed to fetch resume:', err));
 
-    // Fetch blocks for this user
-    fetch('/api/blocks', { headers })
-      .then((res) => res.json())
+    getOrFetch('blocks', '/api/blocks')
       .then((blocks) => {
         // Flatten content fields for each block
         const flattened = blocks.map((b) => {
