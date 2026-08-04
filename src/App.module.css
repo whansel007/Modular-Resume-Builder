@@ -179,3 +179,47 @@ label {
   flex: 1;
   overflow: hidden;
 }
+
+.rightPanel {
+  width: 320px;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: #f9fafb;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  background: #f3f4f6;
+  color: var(--text);
+}
+
+.activeTab {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: var(--panel);
+}
+
+.tabContent {
+  flex: 1;
+  overflow: hidden;
+}

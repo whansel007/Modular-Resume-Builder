@@ -8,6 +8,9 @@ import blocksRouter from './routes/blocks.js';
 import resumesRouter from './routes/resumes.js';
 import authRouter from './routes/auth.js';
 import jobtypesRouter from './routes/jobtypes.js';
+import extractKeywordsRouter from './routes/extractKeywords.js';
+import autofillResumeRouter from './routes/autofillResume.js';
+import resumeChatRouter from './routes/resumeChat.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '.env') });
@@ -23,6 +26,9 @@ app.use('/api/auth', authRouter);
 app.use('/api/blocks', blocksRouter);
 app.use('/api/resumes', resumesRouter);
 app.use('/api/user/jobtypes', jobtypesRouter);
+app.use('/api/extract-keywords', extractKeywordsRouter);
+app.use('/api/autofill-resume', autofillResumeRouter);
+app.use('/api/resume-chat', resumeChatRouter);
 
 app.get('/api/health', (_req, res) => {
   res.json({

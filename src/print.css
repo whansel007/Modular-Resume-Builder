@@ -1,7 +1,9 @@
 @media print {
   /* ── Page setup ── */
+  /* Zero margin suppresses the browser's default header/footer
+     (page title, URL, date/timestamp) */
   @page {
-    margin: 15mm;
+    margin: 0;
   }
 
   body {
@@ -50,7 +52,8 @@
     width: 100% !important;
     min-height: auto !important;
     box-shadow: none !important;
-    padding: 0 !important;
+    /* Replaces the removed @page margin so content isn't flush to edges */
+    padding: 15mm !important;
     margin: 0 !important;
   }
 

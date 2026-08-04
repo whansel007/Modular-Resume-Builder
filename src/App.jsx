@@ -15,6 +15,8 @@ import { generateId } from './utils/id';
 import BlockLibrary from './components/BlockLibrary/BlockLibrary';
 import ResumeCanvas from './components/ResumeCanvas/ResumeCanvas';
 import PropertiesPanel from './components/PropertiesPanel/PropertiesPanel';
+import JobDescriptionPanel from './components/JobDescriptionPanel/JobDescriptionPanel';
+import AIChat from './components/AIChat/AIChat';
 import BlockModal from './components/BlockModal/BlockModal';
 import DebugMenu from './components/DebugMenu/DebugMenu';
 import styles from './App.module.css';
@@ -36,6 +38,10 @@ export default function App() {
 
   const [saveStatus, setSaveStatus] = useState(''); // '' | 'saving' | 'saved' | 'error'
   const exportPdf = useExportPdf();
+
+  // Right panel tab state
+  const [activeRightTab, setActiveRightTab] = useState('properties'); // 'properties' | 'jobDescription'
+  const [extractedKeywords, setExtractedKeywords] = useState([]);
 
   // personalInfo now lives inside the resume object
   const personalInfo = resume.personalInfo || {};
@@ -501,6 +507,96 @@ export default function App() {
     }
   }, [resume, user?.email, setResume]);
 
+  // ---------- AI Auto-fill ----------
+
+  const handleAutoFill = useCallback(async ({ jobDescription, keywords }) => {
+    const owner = user?.email || DEFAULT_OWNER;
+
+    // Slim view of the block library for the AI (strip Mongo/internal fields)
+    const blockSummaries = blocks.map((b) => {
+      const { id, type, _id, owner: _owner, jobTypeIds, ...fields } = b;
+      return { id, type, ...fields };
+    });
+
+    const res = await fetch('/api/autofill-resume', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        jobDescription,
+        keywords,
+        resume: { sectionOrder: resume.sectionOrder, sections: resume.sections },
+        blocks: blockSummaries,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to auto-fill resume');
+    }
+
+    const result = await res.json();
+    const newBlocks = (result.newBlocks || []).map((b) => ({ ...b, owner }));
+
+    if (newBlocks.length > 0) {
+      setBlocks((prev) => [...prev, ...newBlocks]);
+      // Persist new blocks to MongoDB (best effort — canvas already works off local state)
+      fetch('/api/blocks/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(newBlocks),
+      }).catch((err) => console.error('Failed to persist auto-filled blocks:', err));
+    }
+
+    const addedSections = Object.keys(result.sections || {}).filter(
+      (title) => !(resume.sections || {})[title],
+    );
+
+    setResume((prev) => {
+      const sections = { ...(prev.sections || {}) };
+      for (const [title, ids] of Object.entries(result.sections || {})) {
+        if (!sections[title]) {
+          sections[title] = ids;
+        }
+      }
+
+      // Use the server's computed order, but never drop existing sections
+      const serverOrder = Array.isArray(result.sectionOrder) ? result.sectionOrder : [];
+      const mergedOrder = serverOrder.filter((t) => sections[t] !== undefined);
+      for (const t of prev.sectionOrder || []) {
+        if (!mergedOrder.includes(t) && sections[t] !== undefined) mergedOrder.push(t);
+      }
+
+      return { ...prev, sections, sectionOrder: mergedOrder };
+    });
+
+    if (addedSections.length === 0) {
+      return 'Resume already has all default sections';
+    }
+
+    const placedCount = addedSections.reduce(
+      (n, title) => n + ((result.sections || {})[title]?.length || 0),
+      0,
+    );
+    const emptySections = addedSections.filter(
+      (title) => !((result.sections || {})[title]?.length > 0),
+    );
+
+    let message = `Added ${addedSections.join(', ')}`;
+    message += placedCount > 0
+      ? ` and placed ${placedCount} matching block${placedCount === 1 ? '' : 's'} from your library.`
+      : '.';
+    if (emptySections.length > 0) {
+      message += ` ${emptySections.join(', ')} had no matching blocks — drag some in from the library.`;
+    }
+    return message;
+  }, [blocks, resume.sectionOrder, resume.sections, user?.email, setBlocks, setResume]);
+
   // ---------- Drag and Drop ----------
 
   const handleDropFromLibrary = useCallback((blockId, sectionTitle, insertIndex) => {
@@ -611,12 +707,34 @@ export default function App() {
           onCanvasDragEnd={() => setIsCanvasBlockDragging(false)}
         />
 
-        <PropertiesPanel
-          resume={resume}
-          personalInfo={personalInfo}
-          onSetTemplate={setTemplate}
-          onUpdatePersonalInfo={updatePersonalInfoField}
-        />
+        <div className={styles.rightPanel} data-print-hide>
+          <div className={styles.tabBar}>
+            <button
+              className={`${styles.tab} ${activeRightTab === 'properties' ? styles.activeTab : ''}`}
+              onClick={() => setActiveRightTab('properties')}
+            >
+              Properties
+            </button>
+            <button
+              className={`${styles.tab} ${activeRightTab === 'jobDescription' ? styles.activeTab : ''}`}
+              onClick={() => setActiveRightTab('jobDescription')}
+            >
+              Job Description
+            </button>
+          </div>
+          <div className={styles.tabContent}>
+            {activeRightTab === 'properties' ? (
+              <PropertiesPanel
+                resume={resume}
+                personalInfo={personalInfo}
+                onSetTemplate={setTemplate}
+                onUpdatePersonalInfo={updatePersonalInfoField}
+              />
+            ) : (
+              <JobDescriptionPanel onKeywordsExtracted={setExtractedKeywords} onAutoFill={handleAutoFill} />
+            )}
+          </div>
+        </div>
       </div>
 
       {modalOpen && (
@@ -630,6 +748,8 @@ export default function App() {
           onClose={closeModal}
         />
       )}
+
+      <AIChat resume={resume} blocks={blocks} />
     </div>
   );
 }
