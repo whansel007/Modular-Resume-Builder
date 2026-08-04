@@ -6,31 +6,32 @@ export default function BlockModal({
   tempBlock,
   setTempBlock,
   editingBlockId,
-  jobTypes,
+  jobTypes, // Now an object: { jt1: "Software Development", ... }
   onAddCustomJobType,
   onSave,
   onClose,
 }) {
   const [newJobTypeName, setNewJobTypeName] = useState('');
   const schema = BLOCK_SCHEMA[tempBlock.type];
+  const jobTypeIds = tempBlock.jobTypeIds || [];
 
   const handleTypeChange = (e) => {
-    setTempBlock((prev) => ({ ...prev, type: e.target.value, content: {} }));
+    // Reset content fields when switching type, keep id/type/jobTypeIds
+    const { id, type, jobTypeIds: jtIds } = tempBlock;
+    setTempBlock({ id, type: e.target.value, jobTypeIds: jtIds || [] });
   };
 
   const handleFieldChange = (name, value) => {
-    setTempBlock((prev) => ({
-      ...prev,
-      content: { ...prev.content, [name]: value },
-    }));
+    setTempBlock((prev) => ({ ...prev, [name]: value }));
   };
 
-  const toggleJobType = (jt) => {
+  const toggleJobType = (jtId) => {
     setTempBlock((prev) => {
-      const has = prev.jobTypes.includes(jt);
+      const ids = prev.jobTypeIds || [];
+      const has = ids.includes(jtId);
       return {
         ...prev,
-        jobTypes: has ? prev.jobTypes.filter((t) => t !== jt) : [...prev.jobTypes, jt],
+        jobTypeIds: has ? ids.filter((id) => id !== jtId) : [...ids, jtId],
       };
     });
   };
@@ -72,13 +73,13 @@ export default function BlockModal({
               <label>{field.label}</label>
               {field.type === 'textarea' ? (
                 <textarea
-                  value={tempBlock.content[field.name] || ''}
+                  value={tempBlock[field.name] || ''}
                   onChange={(e) => handleFieldChange(field.name, e.target.value)}
                 />
               ) : (
                 <input
                   type="text"
-                  value={tempBlock.content[field.name] || ''}
+                  value={tempBlock[field.name] || ''}
                   onChange={(e) => handleFieldChange(field.name, e.target.value)}
                 />
               )}
@@ -88,13 +89,13 @@ export default function BlockModal({
           <div className={styles.field}>
             <label>Job Types</label>
             <div className={styles.jobTypeSelect}>
-              {jobTypes.map((jt) => (
+              {Object.entries(jobTypes).map(([id, name]) => (
                 <span
-                  key={jt}
-                  className={`${styles.tag} ${tempBlock.jobTypes.includes(jt) ? styles.active : ''}`}
-                  onClick={() => toggleJobType(jt)}
+                  key={id}
+                  className={`${styles.tag} ${jobTypeIds.includes(id) ? styles.active : ''}`}
+                  onClick={() => toggleJobType(id)}
                 >
-                  {jt}
+                  {name}
                 </span>
               ))}
             </div>

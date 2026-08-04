@@ -101,15 +101,67 @@ label {
   flex-shrink: 0;
 }
 
-.headerTitle {
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.backBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.headerTitleInput {
   font-size: 18px;
-  margin: 0;
   font-weight: 700;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 4px 8px;
+  border-radius: var(--radius);
+  margin: 0;
+  min-width: 0;
+  max-width: 300px;
+  transition: border-color 0.15s;
+}
+
+.headerTitleInput:hover {
+  border-color: var(--border);
+}
+
+.headerTitleInput:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: #fff;
 }
 
 .headerActions {
   display: flex;
   gap: 10px;
+  flex-shrink: 0;
+}
+
+.saveBtn {
+  background: var(--success) !important;
+  color: #fff !important;
+  border-color: var(--success) !important;
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: #15803d !important;
+}
+
+.saveBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
 .primary {
@@ -124,6 +176,50 @@ label {
 
 .body {
   display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.rightPanel {
+  width: 320px;
+  background: var(--panel);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+
+.tabBar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: #f9fafb;
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  border-bottom: 2px solid transparent;
+}
+
+.tab:hover {
+  background: #f3f4f6;
+  color: var(--text);
+}
+
+.activeTab {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  background: var(--panel);
+}
+
+.tabContent {
   flex: 1;
   overflow: hidden;
 }

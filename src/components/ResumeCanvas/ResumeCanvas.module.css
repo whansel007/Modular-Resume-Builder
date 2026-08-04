@@ -2,7 +2,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  background: #e5e7eb;
+  background: #fff;
   border-right: 1px solid var(--border);
   overflow: hidden;
 }
@@ -40,18 +40,15 @@
 .canvasScroll {
   flex: 1;
   overflow-y: auto;
-  padding: 30px;
+  padding: 32px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }
 
 .resumePage {
-  width: 210mm;
-  min-height: 297mm;
-  background: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  padding: 20mm;
-  position: relative;
+  width: 100%;
+  max-width: 210mm;
 }
 
 .resumeHeader {

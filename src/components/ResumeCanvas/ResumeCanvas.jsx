@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { BLOCK_SCHEMA, TEMPLATES } from '../../utils/constants';
+import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import ResumeBlock from './ResumeBlock';
 import styles from './ResumeCanvas.module.css';
 
@@ -16,15 +17,19 @@ export default function ResumeCanvas({
   onReorderInCanvas,
   onRemoveBlockFromSection,
   onEditBlock,
+  onCanvasDragStart = () => {},
+  onCanvasDragEnd = () => {},
 }) {
   const [dragOverSection, setDragOverSection] = useState(null);
 
   const template = TEMPLATES[resume.templateId] || TEMPLATES.modern;
+  const sectionOrder = resume.sectionOrder || [];
+  const sections = resume.sections || {};
 
-  const handleDragOver = useCallback((e, sectionId) => {
+  const handleDragOver = useCallback((e, sectionTitle) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverSection(sectionId);
+    setDragOverSection(sectionTitle);
   }, []);
 
   const handleDragLeave = useCallback((e) => {
@@ -34,12 +39,12 @@ export default function ResumeCanvas({
   }, []);
 
   const handleDrop = useCallback(
-    (e, sectionId) => {
+    (e, sectionTitle) => {
       e.preventDefault();
       setDragOverSection(null);
 
-      const blockId = e.dataTransfer.getData('application/x-block-id');
-      const source = e.dataTransfer.getData('application/x-drag-source');
+      const blockId = e.dataTransfer.getData(DRAG_KEYS.BLOCK_ID);
+      const source = e.dataTransfer.getData(DRAG_KEYS.SOURCE);
 
       if (!blockId) return;
 
@@ -47,11 +52,11 @@ export default function ResumeCanvas({
       const insertIndex = afterElement ? Number(afterElement.dataset.idx) : null;
 
       if (source === 'library') {
-        onDropFromLibrary(blockId, sectionId, insertIndex);
+        onDropFromLibrary(blockId, sectionTitle, insertIndex);
       } else if (source === 'canvas') {
-        const sourceSectionId = e.dataTransfer.getData('application/x-source-section');
+        const sourceSectionTitle = e.dataTransfer.getData('application/x-source-section');
         const sourceIndex = Number(e.dataTransfer.getData('application/x-source-index'));
-        onReorderInCanvas(sourceSectionId, sourceIndex, sectionId, insertIndex ?? 999);
+        onReorderInCanvas(sourceSectionTitle, sourceIndex, sectionTitle, insertIndex ?? 999);
       }
     },
     [onDropFromLibrary, onReorderInCanvas],
@@ -93,57 +98,60 @@ export default function ResumeCanvas({
             </div>
           </div>
 
-          {resume.sections.map((section) => (
-            <div
-              key={section.id}
-              className={`${styles.resumeSection} ${dragOverSection === section.id ? styles.dragOver : ''}`}
-              onDragOver={(e) => handleDragOver(e, section.id)}
-              onDrop={(e) => handleDrop(e, section.id)}
-              onDragLeave={handleDragLeave}
-            >
-              <div className={styles.sectionHeader}>
-                <input
-                  className={styles.sectionTitle}
-                  value={section.title}
-                  onChange={(e) => onUpdateSectionTitle(section.id, e.target.value)}
-                />
-                <div className={styles.sectionActions} data-print-hide>
-                  <button
-                    className={styles.iconBtn}
-                    onClick={() => onRemoveSection(section.id)}
-                    title="Remove section"
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
-
-              {section.blockIds.length === 0 && (
-                <div className={styles.dropHint} data-print-hide>Drag blocks here</div>
-              )}
-
-              {section.blockIds.map((blockId, idx) => {
-                const block = blocks.find((b) => b.id === blockId);
-                if (!block) return null;
-                const schema = BLOCK_SCHEMA[block.type];
-                if (!schema) return null;
-                const rendered = schema.render(block);
-
-                return (
-                  <ResumeBlock
-                    key={`${section.id}-${blockId}-${idx}`}
-                    blockId={blockId}
-                    sectionId={section.id}
-                    index={idx}
-                    rendered={rendered}
-                    onRemove={() => onRemoveBlockFromSection(section.id, idx)}
-                    onEdit={() => onEditBlock(blockId)}
-                    formatBody={formatBody}
+          {sectionOrder.map((sectionTitle) => {
+            const blockIds = sections[sectionTitle] || [];
+            return (
+              <div
+                key={sectionTitle}
+                className={`${styles.resumeSection} ${dragOverSection === sectionTitle ? styles.dragOver : ''}`}
+                onDragOver={(e) => handleDragOver(e, sectionTitle)}
+                onDrop={(e) => handleDrop(e, sectionTitle)}
+                onDragLeave={handleDragLeave}
+              >
+                <div className={styles.sectionHeader}>
+                  <input
+                    className={styles.sectionTitle}
+                    value={sectionTitle}
+                    onChange={(e) => onUpdateSectionTitle(sectionTitle, e.target.value)}
                   />
-                );
-              })}
-            </div>
-          ))}
+                  <div className={styles.sectionActions} data-print-hide>
+                    <button
+                      className={styles.iconBtn}
+                      onClick={() => onRemoveSection(sectionTitle)}
+                      title="Remove section"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                </div>
+
+                {blockIds.length === 0 && (
+                  <div className={styles.dropHint} data-print-hide>Drag blocks here</div>
+                )}
+
+                {blockIds.map((blockId, idx) => {
+                  const block = blocks.find((b) => b.id === blockId);
+                  if (!block) return null;
+                  const schema = BLOCK_SCHEMA[block.type];
+                  if (!schema) return null;
+                  const rendered = schema.render(block);
+
+                  return (
+                    <ResumeBlock
+                      key={`${sectionTitle}-${blockId}-${idx}`}
+                      blockId={blockId}
+                      sectionId={sectionTitle}
+                      index={idx}
+                      rendered={rendered}
+                      onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
+                      onEdit={() => onEditBlock(blockId)}
+                      formatBody={formatBody}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })}
 
           <button className={styles.addSection} onClick={onAddSection} data-print-hide>
             + Add Section

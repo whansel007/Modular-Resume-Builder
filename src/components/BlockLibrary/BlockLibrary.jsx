@@ -1,51 +1,84 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { BLOCK_SCHEMA, SECTION_TYPES } from '../../utils/constants';
+import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './BlockLibrary.module.css';
 
 export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBlock }) {
+  // jobTypes is now an object: { jt1: "Software Development", ... }
+  // jobTypes is now an object: { jt1: "Software Development", ... }
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('all');
-  const [jobTypeModes, setJobTypeModes] = useState({});
+  const [jobTypeModes, setJobTypeModes] = useState({}); // { jt1: 'include', jt2: 'require', ... }
+  const [dragOver, setDragOver] = useState(false);
 
-  const includedJobTypes = useMemo(
-    () => jobTypes.filter((jt) => jobTypeModes[jt] === 'include'),
-    [jobTypes, jobTypeModes],
+  const jobTypeEntries = Object.entries(jobTypes); // [[id, name], ...]
+
+  const handleDropZoneDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+
+  const handleDropZoneDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(false);
+    // Drop zone functionality - can be implemented later if needed
+  }, []);
+
+  const handleDropZoneDragLeave = useCallback(() => {
+    setDragOver(false);
+  }, []);
+
+  const includedJobTypeIds = useMemo(
+    () => jobTypeEntries.filter(([id]) => jobTypeModes[id] === 'include').map(([id]) => id),
+    [jobTypeEntries, jobTypeModes],
   );
-  const requiredJobTypes = useMemo(
-    () => jobTypes.filter((jt) => jobTypeModes[jt] === 'require'),
-    [jobTypes, jobTypeModes],
+  const requiredJobTypeIds = useMemo(
+    () => jobTypeEntries.filter(([id]) => jobTypeModes[id] === 'require').map(([id]) => id),
+    [jobTypeEntries, jobTypeModes],
+  const requiredJobTypeIds = useMemo(
+    () => jobTypeEntries.filter(([id]) => jobTypeModes[id] === 'require').map(([id]) => id),
+    [jobTypeEntries, jobTypeModes],
   );
 
   const filtered = useMemo(() => {
     return blocks.filter((b) => {
+      const blockJobTypeIds = b.jobTypeIds || [];
+      const blockJobTypeIds = b.jobTypeIds || [];
       const matchesSearch =
         !searchQuery ||
-        JSON.stringify(b.content).toLowerCase().includes(searchQuery.toLowerCase()) ||
-        b.type.toLowerCase().includes(searchQuery.toLowerCase());
+        JSON.stringify(b).toLowerCase().includes(searchQuery.toLowerCase());
+        JSON.stringify(b).toLowerCase().includes(searchQuery.toLowerCase());
       const matchesSection = selectedSection === 'all' || b.type === selectedSection;
-      const matchesRequired = requiredJobTypes.every((jt) => b.jobTypes.includes(jt));
+      const matchesRequired = requiredJobTypeIds.every((jtId) => blockJobTypeIds.includes(jtId));
+      const matchesRequired = requiredJobTypeIds.every((jtId) => blockJobTypeIds.includes(jtId));
       const matchesIncluded =
-        includedJobTypes.length === 0 ||
-        includedJobTypes.some((jt) => b.jobTypes.includes(jt));
+        includedJobTypeIds.length === 0 ||
+        includedJobTypeIds.some((jtId) => blockJobTypeIds.includes(jtId));
+        includedJobTypeIds.length === 0 ||
+        includedJobTypeIds.some((jtId) => blockJobTypeIds.includes(jtId));
       return matchesSearch && matchesSection && matchesRequired && matchesIncluded;
     });
-  }, [blocks, searchQuery, selectedSection, includedJobTypes, requiredJobTypes]);
+  }, [blocks, searchQuery, selectedSection, includedJobTypeIds, requiredJobTypeIds]);
+  }, [blocks, searchQuery, selectedSection, includedJobTypeIds, requiredJobTypeIds]);
 
   const CYCLE = { off: 'include', include: 'require', require: 'off' };
 
-  const cycleJobType = (jt) => {
+  const cycleJobType = (jtId) => {
+  const cycleJobType = (jtId) => {
     setJobTypeModes((prev) => {
-      const current = prev[jt] || 'off';
+      const current = prev[jtId] || 'off';
+      const current = prev[jtId] || 'off';
       const next = CYCLE[current];
-      return { ...prev, [jt]: next };
+      return { ...prev, [jtId]: next };
+      return { ...prev, [jtId]: next };
     });
   };
 
   const clearFilters = () => setJobTypeModes({});
 
   const handleDragStart = (e, blockId) => {
-    e.dataTransfer.setData('application/x-block-id', blockId);
-    e.dataTransfer.setData('application/x-drag-source', 'library');
+    e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
+    e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.LIBRARY);
     e.dataTransfer.effectAllowed = 'move';
     e.currentTarget.classList.add(styles.dragging);
   };
@@ -54,12 +87,23 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
     e.currentTarget.classList.remove(styles.dragging);
   };
 
-  const isFilterActive = includedJobTypes.length > 0 || requiredJobTypes.length > 0;
+  const isFilterActive = includedJobTypeIds.length > 0 || requiredJobTypeIds.length > 0;
+  const isFilterActive = includedJobTypeIds.length > 0 || requiredJobTypeIds.length > 0;
 
   return (
-    <aside className={styles.panel} data-print-hide>
+    <aside
+      className={styles.panel}
+      data-print-hide
+    >
       <div className={styles.panelHeader}>Block Library</div>
-      <div className={styles.panelContent}>
+      <div
+        className={`${styles.dropZone} ${dragOver ? styles.dropActive : ''}`}
+        onDragOver={handleDropZoneDragOver}
+        onDrop={handleDropZoneDrop}
+        onDragLeave={handleDropZoneDragLeave}
+      >
+        <div className={`${styles.dropHint} ${dragOver ? styles.dropHintVisible : ''}`}>Drop here to remove from resume</div>
+        <div className={styles.panelContent}>
         <div className={styles.toolbar}>
           <div className={styles.field}>
             <label htmlFor="section-select">Section</label>
@@ -91,16 +135,21 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
             >
               All
             </span>
-            {jobTypes.map((jt) => {
-              const mode = jobTypeModes[jt] || 'off';
+            {jobTypeEntries.map(([id, name]) => {
+              const mode = jobTypeModes[id] || 'off';
+            {jobTypeEntries.map(([id, name]) => {
+              const mode = jobTypeModes[id] || 'off';
               const pillClass = mode === 'require' ? styles.required : mode === 'include' ? styles.active : '';
               return (
                 <span
-                  key={jt}
+                  key={id}
+                  key={id}
                   className={`${styles.tag} ${pillClass}`}
-                  onClick={() => cycleJobType(jt)}
+                  onClick={() => cycleJobType(id)}
+                  onClick={() => cycleJobType(id)}
                 >
-                  {jt}
+                  {name}
+                  {name}
                 </span>
               );
             })}
@@ -121,6 +170,8 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
             const schema = BLOCK_SCHEMA[block.type];
             if (!schema) return null;
             const rendered = schema.render(block);
+            const blockJobTypeIds = block.jobTypeIds || [];
+            const blockJobTypeIds = block.jobTypeIds || [];
             return (
               <div
                 key={block.id}
@@ -136,8 +187,10 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
                 </div>
                 <div className={styles.preview}>{rendered.body || 'No additional details.'}</div>
                 <div className={styles.tags}>
-                  {block.jobTypes.map((jt) => (
-                    <span key={jt} className={styles.tag}>{jt}</span>
+                  {blockJobTypeIds.map((jtId) => (
+                    <span key={jtId} className={styles.tag}>{jobTypes[jtId] || jtId}</span>
+                  {blockJobTypeIds.map((jtId) => (
+                    <span key={jtId} className={styles.tag}>{jobTypes[jtId] || jtId}</span>
                   ))}
                 </div>
                 <div className={styles.actions}>
@@ -154,6 +207,7 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
               </div>
             );
           })}
+        </div>
         </div>
       </div>
     </aside>
