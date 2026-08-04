@@ -38,6 +38,7 @@ export default async function handler(req, res) {
 
     res.status(201).json({ token, user: { id: user._id, email: user.email } });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Registration error:', err);
+    res.status(500).json({ error: 'Registration failed' });
   }
 }

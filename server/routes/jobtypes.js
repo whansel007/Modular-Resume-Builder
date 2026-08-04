@@ -19,7 +19,8 @@ router.get('/', requireAuth, async (req, res) => {
     }
     res.json(jobTypes);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to list job types:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -39,7 +40,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     res.status(201).json({ id, name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to add job type:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -61,7 +63,8 @@ router.put('/', requireAuth, async (req, res) => {
 
     res.json({ id, name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to update job type:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -81,7 +84,8 @@ router.delete('/', requireAuth, async (req, res) => {
 
     res.json({ success: true, id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to delete job type:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

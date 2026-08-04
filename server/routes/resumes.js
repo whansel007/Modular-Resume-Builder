@@ -10,7 +10,8 @@ router.get('/', requireAuth, async (req, res) => {
     const resumes = await Resume.find({ owner: req.user.email }).sort({ updatedAt: -1 });
     res.json(resumes);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to list resumes:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -32,7 +33,8 @@ router.post('/', requireAuth, async (req, res) => {
     );
     res.status(201).json(resume);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Failed to upsert resume:', err);
+    res.status(400).json({ error: 'Invalid resume data' });
   }
 });
 
@@ -55,7 +57,8 @@ router.delete('/', requireAuth, async (req, res) => {
     await Resume.findByIdAndDelete(id);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to delete resume:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
