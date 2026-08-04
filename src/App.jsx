@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useExportPdf } from './hooks/useExportPdf';
 import {
@@ -9,11 +8,7 @@ import {
   BLANK_RESUME,
   BLANK_BLOCKS,
   DEFAULT_JOB_TYPES_MAP,
-  BLANK_RESUME,
-  BLANK_BLOCKS,
-  DEFAULT_JOB_TYPES_MAP,
   SECTION_NAME_SUGGESTIONS,
-  DEFAULT_OWNER,
   DEFAULT_OWNER,
 } from './utils/constants';
 import { generateId } from './utils/id';
@@ -23,7 +18,6 @@ import PropertiesPanel from './components/PropertiesPanel/PropertiesPanel';
 import JobDescriptionPanel from './components/JobDescriptionPanel/JobDescriptionPanel';
 import AIChat from './components/AIChat/AIChat';
 import BlockModal from './components/BlockModal/BlockModal';
-import DebugMenu from './components/DebugMenu/DebugMenu';
 import DebugMenu from './components/DebugMenu/DebugMenu';
 import styles from './App.module.css';
 
@@ -36,23 +30,17 @@ export default function App() {
   const [resume, setResume, resetResume] = useLocalStorage('resume-builder-canvas', INITIAL_RESUME);
   // jobTypes is now an object: { jt1: "Software Development", ... }
   const [jobTypes, setJobTypes] = useState({});
-  const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const user = JSON.parse(localStorage.getItem('auth-user') || 'null');
-
-  const [blocks, setBlocks, resetBlocks] = useLocalStorage('resume-builder-blocks', INITIAL_BLOCKS);
-  const [resume, setResume, resetResume] = useLocalStorage('resume-builder-canvas', INITIAL_RESUME);
-  // jobTypes is now an object: { jt1: "Software Development", ... }
-  const [jobTypes, setJobTypes] = useState({});
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBlockId, setEditingBlockId] = useState(null);
   const [tempBlock, setTempBlock] = useState({ type: 'summary', jobTypeIds: [] });
-  const [tempBlock, setTempBlock] = useState({ type: 'summary', jobTypeIds: [] });
 
   const [saveStatus, setSaveStatus] = useState(''); // '' | 'saving' | 'saved' | 'error'
-  const [saveStatus, setSaveStatus] = useState(''); // '' | 'saving' | 'saved' | 'error'
   const exportPdf = useExportPdf();
+
+  // Right panel tab state
+  const [activeRightTab, setActiveRightTab] = useState('properties'); // 'properties' | 'jobDescription'
+  const [extractedKeywords, setExtractedKeywords] = useState([]);
 
   // personalInfo now lives inside the resume object
   const personalInfo = resume.personalInfo || {};
@@ -285,7 +273,6 @@ export default function App() {
   const openNewBlockModal = useCallback(() => {
     setEditingBlockId(null);
     setTempBlock({ type: 'summary', jobTypeIds: [] });
-    setTempBlock({ type: 'summary', jobTypeIds: [] });
     setModalOpen(true);
   }, []);
 
@@ -380,11 +367,8 @@ export default function App() {
     if (!trimmed) return;
     const id = 'jt' + Date.now();
     setJobTypes((prev) => ({ ...prev, [id]: trimmed }));
-    const id = 'jt' + Date.now();
-    setJobTypes((prev) => ({ ...prev, [id]: trimmed }));
     setTempBlock((prev) => ({
       ...prev,
-      jobTypeIds: [...(prev.jobTypeIds || []), id],
       jobTypeIds: [...(prev.jobTypeIds || []), id],
     }));
     // Persist to API
@@ -415,11 +399,6 @@ export default function App() {
       personalInfo: { ...prev.personalInfo, [field]: value },
     }));
   }, [setResume]);
-    setResume((prev) => ({
-      ...prev,
-      personalInfo: { ...prev.personalInfo, [field]: value },
-    }));
-  }, [setResume]);
 
   const addSection = useCallback(() => {
     setResume((prev) => {
@@ -441,13 +420,10 @@ export default function App() {
         ...prev,
         sectionOrder: [...(prev.sectionOrder || []), title],
         sections: { ...(prev.sections || {}), [title]: [] },
-        sectionOrder: [...(prev.sectionOrder || []), title],
-        sections: { ...(prev.sections || {}), [title]: [] },
       };
     });
   }, [setResume]);
 
-  const removeSection = useCallback((sectionTitle) => {
   const removeSection = useCallback((sectionTitle) => {
     if (!confirm('Remove this section from the resume?')) return;
     setResume((prev) => {
@@ -459,30 +435,8 @@ export default function App() {
         sections: newSections,
       };
     });
-    setResume((prev) => {
-      const newSections = { ...prev.sections };
-      delete newSections[sectionTitle];
-      return {
-        ...prev,
-        sectionOrder: (prev.sectionOrder || []).filter((t) => t !== sectionTitle),
-        sections: newSections,
-      };
-    });
   }, [setResume]);
 
-  const updateSectionTitle = useCallback((oldTitle, newTitle) => {
-    if (oldTitle === newTitle) return;
-    setResume((prev) => {
-      const newSections = {};
-      for (const key of Object.keys(prev.sections || {})) {
-        newSections[key === oldTitle ? newTitle : key] = prev.sections[key];
-      }
-      return {
-        ...prev,
-        sectionOrder: (prev.sectionOrder || []).map((t) => (t === oldTitle ? newTitle : t)),
-        sections: newSections,
-      };
-    });
   const updateSectionTitle = useCallback((oldTitle, newTitle) => {
     if (oldTitle === newTitle) return;
     setResume((prev) => {
@@ -552,6 +506,96 @@ export default function App() {
     }
   }, [resume, user?.email, setResume]);
 
+  // ---------- AI Auto-fill ----------
+
+  const handleAutoFill = useCallback(async ({ jobDescription, keywords }) => {
+    const owner = user?.email || DEFAULT_OWNER;
+
+    // Slim view of the block library for the AI (strip Mongo/internal fields)
+    const blockSummaries = blocks.map((b) => {
+      const { id, type, _id, owner: _owner, jobTypeIds, ...fields } = b;
+      return { id, type, ...fields };
+    });
+
+    const res = await fetch('/api/autofill-resume', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({
+        jobDescription,
+        keywords,
+        resume: { sectionOrder: resume.sectionOrder, sections: resume.sections },
+        blocks: blockSummaries,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Failed to auto-fill resume');
+    }
+
+    const result = await res.json();
+    const newBlocks = (result.newBlocks || []).map((b) => ({ ...b, owner }));
+
+    if (newBlocks.length > 0) {
+      setBlocks((prev) => [...prev, ...newBlocks]);
+      // Persist new blocks to MongoDB (best effort — canvas already works off local state)
+      fetch('/api/blocks/bulk', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(newBlocks),
+      }).catch((err) => console.error('Failed to persist auto-filled blocks:', err));
+    }
+
+    const addedSections = Object.keys(result.sections || {}).filter(
+      (title) => !(resume.sections || {})[title],
+    );
+
+    setResume((prev) => {
+      const sections = { ...(prev.sections || {}) };
+      for (const [title, ids] of Object.entries(result.sections || {})) {
+        if (!sections[title]) {
+          sections[title] = ids;
+        }
+      }
+
+      // Use the server's computed order, but never drop existing sections
+      const serverOrder = Array.isArray(result.sectionOrder) ? result.sectionOrder : [];
+      const mergedOrder = serverOrder.filter((t) => sections[t] !== undefined);
+      for (const t of prev.sectionOrder || []) {
+        if (!mergedOrder.includes(t) && sections[t] !== undefined) mergedOrder.push(t);
+      }
+
+      return { ...prev, sections, sectionOrder: mergedOrder };
+    });
+
+    if (addedSections.length === 0) {
+      return 'Resume already has all default sections';
+    }
+
+    const placedCount = addedSections.reduce(
+      (n, title) => n + ((result.sections || {})[title]?.length || 0),
+      0,
+    );
+    const emptySections = addedSections.filter(
+      (title) => !((result.sections || {})[title]?.length > 0),
+    );
+
+    let message = `Added ${addedSections.join(', ')}`;
+    message += placedCount > 0
+      ? ` and placed ${placedCount} matching block${placedCount === 1 ? '' : 's'} from your library.`
+      : '.';
+    if (emptySections.length > 0) {
+      message += ` ${emptySections.join(', ')} had no matching blocks — drag some in from the library.`;
+    }
+    return message;
+  }, [blocks, resume.sectionOrder, resume.sections, user?.email, setBlocks, setResume]);
+
   // ---------- Drag and Drop ----------
 
   const handleDropFromLibrary = useCallback((blockId, sectionTitle, insertIndex) => {
@@ -569,46 +613,19 @@ export default function App() {
         sections: { ...prev.sections, [sectionTitle]: newIds },
       };
     });
-  const handleDropFromLibrary = useCallback((blockId, sectionTitle, insertIndex) => {
-    setResume((prev) => {
-      const currentIds = prev.sections[sectionTitle] || [];
-      if (currentIds.includes(blockId)) return prev;
-      const newIds = [...currentIds];
-      if (insertIndex == null || insertIndex >= newIds.length) {
-        newIds.push(blockId);
-      } else {
-        newIds.splice(insertIndex, 0, blockId);
-      }
-      return {
-        ...prev,
-        sections: { ...prev.sections, [sectionTitle]: newIds },
-      };
-    });
   }, [setResume]);
 
   const handleReorderInCanvas = useCallback((sourceTitle, sourceIndex, targetTitle, targetIndex) => {
-  const handleReorderInCanvas = useCallback((sourceTitle, sourceIndex, targetTitle, targetIndex) => {
     setResume((prev) => {
-      const newSections = { ...prev.sections };
-      const sourceIds = [...(newSections[sourceTitle] || [])];
-      const targetIds = sourceTitle === targetTitle ? sourceIds : [...(newSections[targetTitle] || [])];
       const newSections = { ...prev.sections };
       const sourceIds = [...(newSections[sourceTitle] || [])];
       const targetIds = sourceTitle === targetTitle ? sourceIds : [...(newSections[targetTitle] || [])];
 
       let adjustedTarget = targetIndex;
       if (sourceTitle === targetTitle && sourceIndex < targetIndex) {
-      if (sourceTitle === targetTitle && sourceIndex < targetIndex) {
         adjustedTarget--;
       }
 
-      const [movedId] = sourceIds.splice(sourceIndex, 1);
-      targetIds.splice(adjustedTarget, 0, movedId);
-
-      newSections[sourceTitle] = sourceIds;
-      if (sourceTitle !== targetTitle) {
-        newSections[targetTitle] = targetIds;
-      }
       const [movedId] = sourceIds.splice(sourceIndex, 1);
       targetIds.splice(adjustedTarget, 0, movedId);
 
@@ -621,15 +638,6 @@ export default function App() {
     });
   }, [setResume]);
 
-  const removeBlockFromSection = useCallback((sectionTitle, index) => {
-    setResume((prev) => {
-      const ids = [...(prev.sections[sectionTitle] || [])];
-      ids.splice(index, 1);
-      return {
-        ...prev,
-        sections: { ...prev.sections, [sectionTitle]: ids },
-      };
-    });
   const removeBlockFromSection = useCallback((sectionTitle, index) => {
     setResume((prev) => {
       const ids = [...(prev.sections[sectionTitle] || [])];
@@ -655,28 +663,9 @@ export default function App() {
             placeholder="Resume title..."
           />
         </div>
-        <div className={styles.headerLeft}>
-          <button className={styles.backBtn} onClick={() => navigate('/dashboard')} title="Back to Dashboard">
-            ←
-          </button>
-          <input
-            className={styles.headerTitleInput}
-            value={resume.title}
-            onChange={(e) => updateResumeTitle(e.target.value)}
-            placeholder="Resume title..."
-          />
-        </div>
         <div className={styles.headerActions}>
           <DebugMenu resume={resume} blocks={blocks} />
-          <DebugMenu resume={resume} blocks={blocks} />
           <button onClick={exportPdf}>Export PDF</button>
-          <button
-            className={styles.saveBtn}
-            onClick={saveResumeToDb}
-            disabled={saveStatus === 'saving'}
-          >
-            {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'error' ? 'Save Failed' : 'Save'}
-          </button>
           <button
             className={styles.saveBtn}
             onClick={saveResumeToDb}
@@ -711,7 +700,7 @@ export default function App() {
           onEditBlock={openEditBlockModal}
         />
 
-        <div className={styles.rightPanel}>
+        <div className={styles.rightPanel} data-print-hide>
           <div className={styles.tabBar}>
             <button
               className={`${styles.tab} ${activeRightTab === 'properties' ? styles.activeTab : ''}`}
