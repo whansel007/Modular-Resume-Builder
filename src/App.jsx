@@ -70,20 +70,39 @@ export default function App() {
   useEffect(() => {
     if (searchParams.get('new') === 'true') {
       setResume(BLANK_RESUME);
-      // Don't clear blocks - they're shared across all resumes
+      
+      // Fetch blocks from MongoDB for the authenticated user
+      const email = user?.email || DEFAULT_OWNER;
+      fetch('/api/blocks', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+        }
+      })
+        .then((res) => res.json())
+        .then((blocks) => {
+          // Flatten content fields for each block
+          const flattened = blocks.map((b) => {
+            const { content, ...rest } = b;
+            return { ...rest, ...(content || {}), id: b._id };
+          });
+          setBlocks(flattened);
+        })
+        .catch((err) => console.error('Failed to fetch blocks:', err));
+      
       setSearchParams({});
     }
-  }, [searchParams, setSearchParams, setResume]);
+  }, [searchParams, setSearchParams, setResume, setBlocks, user?.email]);
 
   // ---------- Fetch resume and blocks from MongoDB if ?resume=<id> ----------
   useEffect(() => {
     const resumeId = searchParams.get('resume');
     if (!resumeId) return;
 
-    const email = user?.email || DEFAULT_OWNER;
+    const authToken = localStorage.getItem('auth-token');
+    const headers = { 'Authorization': `Bearer ${authToken}` };
 
     // Fetch the specific resume
-    fetch(`/api/resumes?owner=${encodeURIComponent(email)}`)
+    fetch('/api/resumes', { headers })
       .then((res) => res.json())
       .then((resumes) => {
         const found = resumes.find((r) => r._id === resumeId);
@@ -95,7 +114,7 @@ export default function App() {
       .catch((err) => console.error('Failed to fetch resume:', err));
 
     // Fetch blocks for this user
-    fetch(`/api/blocks?owner=${encodeURIComponent(email)}`)
+    fetch('/api/blocks', { headers })
       .then((res) => res.json())
       .then((blocks) => {
         // Flatten content fields for each block
@@ -109,7 +128,7 @@ export default function App() {
 
     // Clear the query param so we don't re-fetch on every render
     setSearchParams({});
-  }, [searchParams, setSearchParams, user?.email, setResume, setBlocks]);
+  }, [searchParams, setSearchParams, setResume, setBlocks]);
 
   // ---------- Data migrations (old localStorage formats) ----------
   useEffect(() => {
@@ -131,13 +150,47 @@ export default function App() {
       Object.entries(jobTypes).forEach(([id, name]) => {
         nameToId[name] = id;
       });
-      return prev.map((b) => {
+      
+      // Track new job types that need to be created
+      const newJobTypes = {};
+      
+      const migrated = prev.map((b) => {
         if (b.jobTypeIds) return b;
         if (!b.jobTypes) return { ...b, jobTypeIds: [] };
-        const ids = b.jobTypes.map((name) => nameToId[name]).filter(Boolean);
+        
+        const ids = b.jobTypes.map((name) => {
+          // If we have a matching ID, use it
+          if (nameToId[name]) return nameToId[name];
+          // Otherwise, create a new ID for this job type
+          const newId = `jt-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+          newJobTypes[newId] = name;
+          nameToId[name] = newId; // Cache for subsequent blocks
+          return newId;
+        });
+        
         const { jobTypes: _, ...rest } = b;
         return { ...rest, jobTypeIds: ids };
       });
+      
+      // Persist new job types to the API
+      if (Object.keys(newJobTypes).length > 0) {
+        const email = user?.email || DEFAULT_OWNER;
+        Object.entries(newJobTypes).forEach(([id, name]) => {
+          fetch('/api/user/jobtypes', {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+            },
+            body: JSON.stringify({ email, id, name }),
+          }).catch((err) => console.error('Failed to create job type:', err));
+        });
+        
+        // Update local jobTypes state
+        setJobTypes((prev) => ({ ...prev, ...newJobTypes }));
+      }
+      
+      return migrated;
     });
 
     // Migrate resume: old sections array → { sectionOrder, sections: { Title: [ids] } }
@@ -222,27 +275,75 @@ export default function App() {
     setEditingBlockId(null);
   }, []);
 
-  const saveBlock = useCallback(() => {
-    if (editingBlockId) {
-      setBlocks((prev) =>
-        prev.map((b) => (b.id === editingBlockId ? { ...tempBlock, id: editingBlockId } : b)),
-      );
-    } else {
-      setBlocks((prev) => [...prev, { ...tempBlock, id: generateId() }]);
-    }
-    closeModal();
-  }, [editingBlockId, tempBlock, setBlocks, closeModal]);
+  const saveBlock = useCallback(async () => {
+    const owner = user?.email || DEFAULT_OWNER;
+    const blockId = editingBlockId || generateId();
+    
+    // Prepare block data for API (flatten content fields)
+    const { jobTypeIds, type, ...contentFields } = tempBlock;
+    const blockData = {
+      id: blockId,
+      owner,
+      type,
+      jobTypeIds: jobTypeIds || [],
+      ...contentFields,
+    };
 
-  const deleteBlock = useCallback((blockId) => {
-    if (!confirm('Delete this block from the library? It will also be removed from any resume using it.')) return;
-    setBlocks((prev) => prev.filter((b) => b.id !== blockId));
-    setResume((prev) => {
-      const newSections = { ...prev.sections };
-      for (const key of Object.keys(newSections)) {
-        newSections[key] = newSections[key].filter((id) => id !== blockId);
+    try {
+      // Save to MongoDB
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+        },
+        body: JSON.stringify(blockData),
+      });
+
+      if (!res.ok) throw new Error('Failed to save block');
+
+      // Update local state
+      if (editingBlockId) {
+        setBlocks((prev) =>
+          prev.map((b) => (b.id === editingBlockId ? { ...tempBlock, id: editingBlockId } : b)),
+        );
+      } else {
+        setBlocks((prev) => [...prev, { ...tempBlock, id: blockId }]);
       }
-      return { ...prev, sections: newSections };
-    });
+      closeModal();
+    } catch (err) {
+      console.error('Save block error:', err);
+      alert('Failed to save block to server');
+    }
+  }, [editingBlockId, tempBlock, setBlocks, closeModal, user?.email]);
+
+  const deleteBlock = useCallback(async (blockId) => {
+    if (!confirm('Delete this block from the library? It will also be removed from any resume using it.')) return;
+    
+    try {
+      // Delete from MongoDB
+      const res = await fetch(`/api/blocks/${blockId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+        }
+      });
+
+      if (!res.ok) throw new Error('Failed to delete block');
+
+      // Update local state
+      setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+      setResume((prev) => {
+        const newSections = { ...prev.sections };
+        for (const key of Object.keys(newSections)) {
+          newSections[key] = newSections[key].filter((id) => id !== blockId);
+        }
+        return { ...prev, sections: newSections };
+      });
+    } catch (err) {
+      console.error('Delete block error:', err);
+      alert('Failed to delete block from server');
+    }
   }, [setBlocks, setResume]);
 
   // ---------- Job Types ----------
@@ -285,7 +386,19 @@ export default function App() {
   const addSection = useCallback(() => {
     setResume((prev) => {
       const used = new Set(prev.sectionOrder || []);
-      const title = SECTION_NAME_SUGGESTIONS.find((n) => !used.has(n)) || 'Section';
+      // Find first unused suggestion
+      let title = SECTION_NAME_SUGGESTIONS.find((n) => !used.has(n));
+      
+      // If all suggestions are used, generate a unique title
+      if (!title) {
+        let counter = 1;
+        title = `Section ${counter}`;
+        while (used.has(title)) {
+          counter++;
+          title = `Section ${counter}`;
+        }
+      }
+      
       return {
         ...prev,
         sectionOrder: [...(prev.sectionOrder || []), title],
@@ -324,8 +437,13 @@ export default function App() {
 
   const clearResume = useCallback(() => {
     if (!confirm('Clear all sections from this resume? Blocks in the library will not be deleted.')) return;
-    resetResume();
-  }, [resetResume]);
+    // Clear sections but keep the resume structure
+    setResume((prev) => ({
+      ...prev,
+      sectionOrder: [],
+      sections: {},
+    }));
+  }, [setResume]);
 
   // ---------- Save Resume to MongoDB ----------
 
@@ -455,9 +573,6 @@ export default function App() {
           jobTypes={jobTypes}
           onEditBlock={openEditBlockModal}
           onDeleteBlock={deleteBlock}
-          onRemoveBlockFromResume={removeBlockFromSection}
-          isCanvasBlockDragging={isCanvasBlockDragging}
-          onCanvasDragEnd={handleCanvasDragEnd}
         />
 
         <ResumeCanvas

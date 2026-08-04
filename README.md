@@ -58,7 +58,7 @@ A full-stack web application for building tailored resumes from a library of reu
 
 ### Prerequisites
 
-- **Node.js** 18+ (see `.node-version` for exact version)
+- **Node.js** 18+ (required by bcrypt 6.x and other dependencies)
 - **npm** 9+
 - **MongoDB** — Either local MongoDB or MongoDB Atlas connection string
 

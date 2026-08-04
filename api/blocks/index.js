@@ -1,21 +1,26 @@
 import { connectToDatabase } from '../lib/db.js';
 import Block from '../lib/models/Block.js';
+import { requireAuth } from '../lib/auth.js';
 
 export default async function handler(req, res) {
   try {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
     await connectToDatabase();
 
     if (req.method === 'GET') {
-      const filter = req.query.owner ? { owner: req.query.owner } : {};
-      const blocks = await Block.find(filter).sort({ updatedAt: -1 });
+      // Only return blocks owned by the authenticated user
+      const blocks = await Block.find({ owner: user.email }).sort({ updatedAt: -1 });
       return res.json(blocks);
     }
 
     if (req.method === 'POST') {
-      const { id, owner, type, jobTypeIds, ...contentFields } = req.body;
+      const { id, type, jobTypeIds, ...contentFields } = req.body;
+      // Force owner to be the authenticated user's email
       const block = await Block.findByIdAndUpdate(
         id,
-        { _id: id, owner, type, jobTypeIds: jobTypeIds || [], content: contentFields },
+        { _id: id, owner: user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields },
         { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
       );
       return res.status(201).json(block);

@@ -1,65 +1,60 @@
 import { connectToDatabase } from '../lib/db.js';
 import User from '../lib/models/User.js';
+import { requireAuth } from '../lib/auth.js';
 
 export default async function handler(req, res) {
   try {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
     await connectToDatabase();
 
-    const { email } = req.query;
-    if (!email) return res.status(400).json({ error: 'Email required' });
-
-    const user = await User.findOne({ email });
-    if (!user) return res.status(404).json({ error: 'User not found' });
+    const dbUser = await User.findOne({ email: user.email });
+    if (!dbUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
     if (req.method === 'GET') {
-      // Convert Map to plain object
-      const jobTypes = {};
-      if (user.jobTypes) {
-        for (const [key, value] of user.jobTypes) {
-          jobTypes[key] = value;
+      // Return job types as a plain object
+      const jobTypesObj = {};
+      if (dbUser.jobTypes) {
+        for (const [key, value] of dbUser.jobTypes.entries()) {
+          jobTypesObj[key] = value;
         }
       }
-      return res.json(jobTypes);
+      return res.json(jobTypesObj);
     }
 
     if (req.method === 'POST') {
-      // Add a new job type
       const { id, name } = req.body;
-      if (!id || !name) return res.status(400).json({ error: 'id and name required' });
-
-      const jobTypes = user.jobTypes || new Map();
-      jobTypes.set(id, name);
-      user.jobTypes = jobTypes;
-      await user.save();
-
+      if (!id || !name) {
+        return res.status(400).json({ error: 'Missing id or name' });
+      }
+      dbUser.jobTypes.set(id, name);
+      await dbUser.save();
       return res.status(201).json({ id, name });
     }
 
     if (req.method === 'PUT') {
-      // Update an existing job type name
       const { id, name } = req.body;
-      if (!id || !name) return res.status(400).json({ error: 'id and name required' });
-
-      const jobTypes = user.jobTypes || new Map();
-      if (!jobTypes.has(id)) return res.status(404).json({ error: 'Job type not found' });
-
-      jobTypes.set(id, name);
-      user.jobTypes = jobTypes;
-      await user.save();
-
+      if (!id || !name) {
+        return res.status(400).json({ error: 'Missing id or name' });
+      }
+      if (!dbUser.jobTypes.has(id)) {
+        return res.status(404).json({ error: 'Job type not found' });
+      }
+      dbUser.jobTypes.set(id, name);
+      await dbUser.save();
       return res.json({ id, name });
     }
 
     if (req.method === 'DELETE') {
-      // Delete a job type
       const { id } = req.query;
-      if (!id) return res.status(400).json({ error: 'id required' });
-
-      const jobTypes = user.jobTypes || new Map();
-      jobTypes.delete(id);
-      user.jobTypes = jobTypes;
-      await user.save();
-
+      if (!id) {
+        return res.status(400).json({ error: 'Missing id query parameter' });
+      }
+      dbUser.jobTypes.delete(id);
+      await dbUser.save();
       return res.json({ success: true, id });
     }
 

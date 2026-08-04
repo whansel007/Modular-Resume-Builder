@@ -164,23 +164,46 @@ export default function Dashboard() {
     try {
       const res = await fetch(`/api/user/jobtypes?email=${encodeURIComponent(user.email)}&id=${id}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+        }
       });
 
       if (!res.ok) throw new Error('Failed to delete job type');
 
-      // Remove from local state and from all blocks
+      // Remove from local state
       setJobTypes((prev) => {
         const next = { ...prev };
         delete next[id];
         return next;
       });
 
-      setBlocks((prev) =>
-        prev.map((b) => ({
-          ...b,
-          jobTypeIds: (b.jobTypeIds || []).filter((jtId) => jtId !== id),
-        })),
-      );
+      // Remove from all blocks (local state)
+      const updatedBlocks = blocks.map((b) => ({
+        ...b,
+        jobTypeIds: (b.jobTypeIds || []).filter((jtId) => jtId !== id),
+      }));
+      setBlocks(updatedBlocks);
+
+      // Persist block changes to MongoDB
+      const authToken = localStorage.getItem('auth-token');
+      for (const block of updatedBlocks) {
+        const { jobTypeIds, type, id: blockId, ...contentFields } = block;
+        await fetch('/api/blocks', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`
+          },
+          body: JSON.stringify({
+            id: blockId,
+            owner: user.email,
+            type,
+            jobTypeIds: jobTypeIds || [],
+            ...contentFields,
+          }),
+        });
+      }
     } catch (err) {
       setError('Failed to delete job type');
     }

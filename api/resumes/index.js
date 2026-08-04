@@ -1,21 +1,26 @@
 import { connectToDatabase } from '../lib/db.js';
 import Resume from '../lib/models/Resume.js';
+import { requireAuth } from '../lib/auth.js';
 
 export default async function handler(req, res) {
   try {
+    const user = requireAuth(req, res);
+    if (!user) return;
+
     await connectToDatabase();
 
     if (req.method === 'GET') {
-      const filter = req.query.owner ? { owner: req.query.owner } : {};
-      const resumes = await Resume.find(filter).sort({ updatedAt: -1 });
+      // Only return resumes owned by the authenticated user
+      const resumes = await Resume.find({ owner: user.email }).sort({ updatedAt: -1 });
       return res.json(resumes);
     }
 
     if (req.method === 'POST') {
-      const { id, owner, title, templateId, personalInfo, sectionOrder, sections } = req.body;
+      const { id, title, templateId, personalInfo, sectionOrder, sections } = req.body;
+      // Force owner to be the authenticated user's email
       const resume = await Resume.findByIdAndUpdate(
         id,
-        { _id: id, owner, title, templateId, personalInfo, sectionOrder, sections },
+        { _id: id, owner: user.email, title, templateId, personalInfo, sectionOrder, sections },
         { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
       );
       return res.status(201).json(resume);
@@ -25,6 +30,14 @@ export default async function handler(req, res) {
       const { id } = req.query;
       if (!id) {
         return res.status(400).json({ error: 'Missing id query parameter' });
+      }
+      // Verify ownership before deleting
+      const resume = await Resume.findById(id);
+      if (!resume) {
+        return res.status(404).json({ error: 'Resume not found' });
+      }
+      if (resume.owner !== user.email) {
+        return res.status(403).json({ error: 'Not authorized to delete this resume' });
       }
       await Resume.findByIdAndDelete(id);
       return res.json({ success: true });
