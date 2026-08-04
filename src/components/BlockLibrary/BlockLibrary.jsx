@@ -8,8 +8,24 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('all');
   const [jobTypeModes, setJobTypeModes] = useState({}); // { jt1: 'include', jt2: 'require', ... }
+  const [dragOver, setDragOver] = useState(false);
 
   const jobTypeEntries = Object.entries(jobTypes); // [[id, name], ...]
+
+  const handleDropZoneDragOver = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+
+  const handleDropZoneDrop = useCallback((e) => {
+    e.preventDefault();
+    setDragOver(false);
+    // Drop zone functionality - can be implemented later if needed
+  }, []);
+
+  const handleDropZoneDragLeave = useCallback(() => {
+    setDragOver(false);
+  }, []);
 
   const includedJobTypeIds = useMemo(
     () => jobTypeEntries.filter(([id]) => jobTypeModes[id] === 'include').map(([id]) => id),
@@ -70,6 +86,7 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
         className={`${styles.dropZone} ${dragOver ? styles.dropActive : ''}`}
         onDragOver={handleDropZoneDragOver}
         onDrop={handleDropZoneDrop}
+        onDragLeave={handleDropZoneDragLeave}
       >
         <div className={`${styles.dropHint} ${dragOver ? styles.dropHintVisible : ''}`}>Drop here to remove from resume</div>
         <div className={styles.panelContent}>

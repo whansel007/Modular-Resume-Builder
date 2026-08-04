@@ -1,15 +1,13 @@
 import { Router } from 'express';
 import User from '../models/User.js';
+import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
 
-// GET all job types for a user
-router.get('/', async (req, res) => {
+// GET all job types for authenticated user
+router.get('/', requireAuth, async (req, res) => {
   try {
-    const { email } = req.query;
-    if (!email) return res.status(400).json({ error: 'Email required' });
-
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: req.user.email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     // Convert Map to plain object
@@ -26,12 +24,12 @@ router.get('/', async (req, res) => {
 });
 
 // POST add a new job type
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
-    const { email, id, name } = req.body;
-    if (!email || !id || !name) return res.status(400).json({ error: 'email, id, and name required' });
+    const { id, name } = req.body;
+    if (!id || !name) return res.status(400).json({ error: 'id and name required' });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: req.user.email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const jobTypes = user.jobTypes || new Map();
@@ -46,12 +44,12 @@ router.post('/', async (req, res) => {
 });
 
 // PUT update an existing job type name
-router.put('/', async (req, res) => {
+router.put('/', requireAuth, async (req, res) => {
   try {
-    const { email, id, name } = req.body;
-    if (!email || !id || !name) return res.status(400).json({ error: 'email, id, and name required' });
+    const { id, name } = req.body;
+    if (!id || !name) return res.status(400).json({ error: 'id and name required' });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: req.user.email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const jobTypes = user.jobTypes || new Map();
@@ -68,12 +66,12 @@ router.put('/', async (req, res) => {
 });
 
 // DELETE a job type
-router.delete('/', async (req, res) => {
+router.delete('/', requireAuth, async (req, res) => {
   try {
-    const { email, id } = req.query;
-    if (!email || !id) return res.status(400).json({ error: 'email and id required' });
+    const { id } = req.query;
+    if (!id) return res.status(400).json({ error: 'id required' });
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: req.user.email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
     const jobTypes = user.jobTypes || new Map();

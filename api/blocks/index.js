@@ -17,6 +17,13 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { id, type, jobTypeIds, ...contentFields } = req.body;
+      
+      // Check if block exists and verify ownership
+      const existingBlock = await Block.findById(id);
+      if (existingBlock && existingBlock.owner !== user.email) {
+        return res.status(403).json({ error: 'Not authorized to modify this block' });
+      }
+      
       // Force owner to be the authenticated user's email
       const block = await Block.findByIdAndUpdate(
         id,

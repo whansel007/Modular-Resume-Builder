@@ -7,13 +7,20 @@ import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('auth-user') || 'null');
+  const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('auth-user') || 'null'));
 
   const [resumes, setResumes] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [jobTypes, setJobTypes] = useState({}); // { jt1: "Software Development", ... }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user?.email) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
 
   // Block modal state
   const [blockModalOpen, setBlockModalOpen] = useState(false);
@@ -23,6 +30,11 @@ export default function Dashboard() {
   // Job type management state
   const [newJobTypeName, setNewJobTypeName] = useState('');
 
+  // Helper to get auth headers
+  const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+  });
+
   const fetchData = useCallback(async () => {
     if (!user?.email) return;
     setLoading(true);
@@ -30,9 +42,9 @@ export default function Dashboard() {
 
     try {
       const [resumesRes, blocksRes, jobTypesRes] = await Promise.all([
-        fetch(`/api/resumes?owner=${encodeURIComponent(user.email)}`),
-        fetch(`/api/blocks?owner=${encodeURIComponent(user.email)}`),
-        fetch(`/api/user/jobtypes?email=${encodeURIComponent(user.email)}`),
+        fetch('/api/resumes', { headers: getAuthHeaders() }),
+        fetch('/api/blocks', { headers: getAuthHeaders() }),
+        fetch('/api/user/jobtypes', { headers: getAuthHeaders() }),
       ]);
 
       if (!resumesRes.ok || !blocksRes.ok || !jobTypesRes.ok) {
@@ -49,7 +61,7 @@ export default function Dashboard() {
 
       // If user has no job types, seed defaults
       if (Object.keys(jobTypesData).length === 0) {
-        await seedDefaultJobTypes(user.email);
+        await seedDefaultJobTypes();
       }
     } catch (err) {
       setError(err.message || 'Failed to load data');
@@ -62,13 +74,16 @@ export default function Dashboard() {
     fetchData();
   }, [fetchData]);
 
-  const seedDefaultJobTypes = async (email) => {
+  const seedDefaultJobTypes = async () => {
     try {
       const promises = Object.entries(DEFAULT_JOB_TYPES_MAP).map(([id, name]) =>
         fetch('/api/user/jobtypes', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, id, name }),
+          headers: { 
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({ id, name }),
         }),
       );
       await Promise.all(promises);
@@ -81,6 +96,7 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('auth-token');
     localStorage.removeItem('auth-user');
+    setUser(null);
     navigate('/');
   };
 
@@ -116,7 +132,10 @@ export default function Dashboard() {
     try {
       const res = await fetch('/api/blocks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify(blockToSave),
       });
 
@@ -146,8 +165,11 @@ export default function Dashboard() {
     try {
       const res = await fetch('/api/user/jobtypes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email, id, name }),
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
+        body: JSON.stringify({ id, name }),
       });
 
       if (!res.ok) throw new Error('Failed to add job type');
@@ -162,11 +184,9 @@ export default function Dashboard() {
     if (!confirm('Delete this job type? It will be removed from all blocks.')) return;
 
     try {
-      const res = await fetch(`/api/user/jobtypes?email=${encodeURIComponent(user.email)}&id=${id}`, {
+      const res = await fetch(`/api/user/jobtypes?id=${id}`, {
         method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
-        }
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) throw new Error('Failed to delete job type');
@@ -188,7 +208,8 @@ export default function Dashboard() {
       // Persist block changes to MongoDB
       const authToken = localStorage.getItem('auth-token');
       for (const block of updatedBlocks) {
-        const { jobTypeIds, type, id: blockId, ...contentFields } = block;
+        const { jobTypeIds, type, ...contentFields } = block;
+        const blockId = block._id || block.id;
         await fetch('/api/blocks', {
           method: 'POST',
           headers: {
@@ -224,7 +245,10 @@ export default function Dashboard() {
 
       const res = await fetch('/api/resumes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify(newResume),
       });
 
@@ -241,6 +265,7 @@ export default function Dashboard() {
     try {
       const res = await fetch(`/api/resumes?id=${resumeId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
 
       if (!res.ok) throw new Error('Failed to delete resume');
@@ -417,8 +442,11 @@ export default function Dashboard() {
             // Also persist to API
             fetch('/api/user/jobtypes', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: user.email, id, name }),
+              headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+              },
+              body: JSON.stringify({ id, name }),
             });
           }}
           onSave={saveBlock}

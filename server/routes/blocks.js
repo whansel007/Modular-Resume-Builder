@@ -1,13 +1,13 @@
 import { Router } from 'express';
 import Block from '../models/Block.js';
+import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
 
-// GET all blocks (optionally filter by owner query param)
-router.get('/', async (req, res) => {
+// GET all blocks (only for authenticated user)
+router.get('/', requireAuth, async (req, res) => {
   try {
-    const filter = req.query.owner ? { owner: req.query.owner } : {};
-    const blocks = await Block.find(filter).sort({ updatedAt: -1 });
+    const blocks = await Block.find({ owner: req.user.email }).sort({ updatedAt: -1 });
     res.json(blocks);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -15,12 +15,19 @@ router.get('/', async (req, res) => {
 });
 
 // POST upsert a block (uses _id from body)
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
-    const { id, owner, type, jobTypeIds, ...contentFields } = req.body;
+    const { id, type, jobTypeIds, ...contentFields } = req.body;
+    
+    // Check if block exists and verify ownership
+    const existingBlock = await Block.findById(id);
+    if (existingBlock && existingBlock.owner !== req.user.email) {
+      return res.status(403).json({ error: 'Not authorized to modify this block' });
+    }
+    
     const block = await Block.findByIdAndUpdate(
       id,
-      { _id: id, owner, type, jobTypeIds: jobTypeIds || [], content: contentFields },
+      { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields },
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     );
     res.status(201).json(block);
@@ -30,17 +37,17 @@ router.post('/', async (req, res) => {
 });
 
 // POST bulk — upsert many blocks at once
-router.post('/bulk', async (req, res) => {
+router.post('/bulk', requireAuth, async (req, res) => {
   try {
     const blocks = req.body;
     if (!Array.isArray(blocks)) return res.status(400).json({ error: 'Expected array of blocks' });
 
     const ops = blocks.map((b) => {
-      const { id, owner, type, jobTypeIds, ...contentFields } = b;
+      const { id, type, jobTypeIds, ...contentFields } = b;
       return {
         updateOne: {
-          filter: { _id: id },
-          update: { _id: id, owner, type, jobTypeIds: jobTypeIds || [], content: contentFields },
+          filter: { _id: id, owner: req.user.email },
+          update: { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields },
           upsert: true,
         },
       };
@@ -54,8 +61,15 @@ router.post('/bulk', async (req, res) => {
 });
 
 // DELETE a block
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireAuth, async (req, res) => {
   try {
+    const block = await Block.findById(req.params.id);
+    if (!block) {
+      return res.status(404).json({ error: 'Block not found' });
+    }
+    if (block.owner !== req.user.email) {
+      return res.status(403).json({ error: 'Not authorized to delete this block' });
+    }
     await Block.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {

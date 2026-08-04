@@ -58,7 +58,7 @@ A full-stack web application for building tailored resumes from a library of reu
 
 ### Prerequisites
 
-- **Node.js** 18+ (required by bcrypt 6.x and other dependencies)
+- **Node.js** 20+ (required by Mongoose 9.x and bcrypt 6.x)
 - **npm** 9+
 - **MongoDB** — Either local MongoDB or MongoDB Atlas connection string
 
@@ -117,6 +117,8 @@ npm run preview
 ├── server/                           Express backend (local dev)
 │   ├── index.js                      Express server entry point
 │   ├── seed.js                       Database seeding script
+│   ├── lib/
+│   │   └── auth.js                   JWT authentication middleware
 │   ├── models/                       Mongoose models
 │   │   ├── Block.js
 │   │   ├── Resume.js

@@ -39,10 +39,15 @@ export default function App() {
   // personalInfo now lives inside the resume object
   const personalInfo = resume.personalInfo || {};
 
+  // Helper to get auth headers
+  const getAuthHeaders = () => ({
+    'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+  });
+
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
     const email = user?.email || DEFAULT_OWNER;
-    fetch(`/api/user/jobtypes?email=${encodeURIComponent(email)}`)
+    fetch('/api/user/jobtypes', { headers: getAuthHeaders() })
       .then((res) => res.json())
       .then((data) => {
         if (Object.keys(data).length === 0) {
@@ -52,7 +57,10 @@ export default function App() {
           Object.entries(DEFAULT_JOB_TYPES_MAP).forEach(([id, name]) => {
             fetch('/api/user/jobtypes', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+              },
               body: JSON.stringify({ email, id, name }),
             });
           });
@@ -361,7 +369,10 @@ export default function App() {
     const email = user?.email || DEFAULT_OWNER;
     fetch('/api/user/jobtypes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify({ email, id, name: trimmed }),
     });
   }, [user?.email]);
@@ -457,7 +468,10 @@ export default function App() {
     try {
       const res = await fetch('/api/resumes', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...getAuthHeaders()
+        },
         body: JSON.stringify({
           id: resumeId,
           owner,
@@ -588,8 +602,6 @@ export default function App() {
           onReorderInCanvas={handleReorderInCanvas}
           onRemoveBlockFromSection={removeBlockFromSection}
           onEditBlock={openEditBlockModal}
-          onCanvasDragStart={handleCanvasDragStart}
-          onCanvasDragEnd={handleCanvasDragEnd}
         />
 
         <PropertiesPanel

@@ -17,6 +17,13 @@ export default async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { id, title, templateId, personalInfo, sectionOrder, sections } = req.body;
+      
+      // Check if resume exists and verify ownership
+      const existingResume = await Resume.findById(id);
+      if (existingResume && existingResume.owner !== user.email) {
+        return res.status(403).json({ error: 'Not authorized to modify this resume' });
+      }
+      
       // Force owner to be the authenticated user's email
       const resume = await Resume.findByIdAndUpdate(
         id,
