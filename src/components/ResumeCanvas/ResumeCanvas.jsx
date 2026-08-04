@@ -51,11 +51,11 @@ export default function ResumeCanvas({
       const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
       const insertIndex = afterElement ? Number(afterElement.dataset.idx) : null;
 
-      if (source === 'library') {
+      if (source === DRAG_SOURCE.LIBRARY) {
         onDropFromLibrary(blockId, sectionTitle, insertIndex);
-      } else if (source === 'canvas') {
-        const sourceSectionTitle = e.dataTransfer.getData('application/x-source-section');
-        const sourceIndex = Number(e.dataTransfer.getData('application/x-source-index'));
+      } else if (source === DRAG_SOURCE.CANVAS) {
+        const sourceSectionTitle = e.dataTransfer.getData(DRAG_KEYS.SOURCE_SECTION);
+        const sourceIndex = Number(e.dataTransfer.getData(DRAG_KEYS.SOURCE_INDEX));
         onReorderInCanvas(sourceSectionTitle, sourceIndex, sectionTitle, insertIndex ?? 999);
       }
     },
@@ -146,6 +146,8 @@ export default function ResumeCanvas({
                       onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
                       onEdit={() => onEditBlock(blockId)}
                       formatBody={formatBody}
+                      onCanvasDragStart={onCanvasDragStart}
+                      onCanvasDragEnd={onCanvasDragEnd}
                     />
                   );
                 })}

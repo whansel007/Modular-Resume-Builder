@@ -3,28 +3,37 @@ import { BLOCK_SCHEMA, SECTION_TYPES } from '../../utils/constants';
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './BlockLibrary.module.css';
 
-export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBlock }) {
+export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBlock, onRemoveBlockFromResume = () => {}, isCanvasBlockDragging = false, onCanvasDragEnd }) {
   // jobTypes is now an object: { jt1: "Software Development", ... }
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('all');
   const [jobTypeModes, setJobTypeModes] = useState({}); // { jt1: 'include', jt2: 'require', ... }
-  const [dragOver, setDragOver] = useState(false);
+  const dragOver = isCanvasBlockDragging;
 
   const jobTypeEntries = Object.entries(jobTypes); // [[id, name], ...]
 
   const handleDropZoneDragOver = useCallback((e) => {
-    e.preventDefault();
-    setDragOver(true);
+    // Allow drop from canvas blocks
+    if (Array.from(e.dataTransfer.types).includes(DRAG_KEYS.SOURCE_SECTION)) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
   }, []);
 
   const handleDropZoneDrop = useCallback((e) => {
     e.preventDefault();
-    setDragOver(false);
-    // Drop zone functionality - can be implemented later if needed
-  }, []);
+    const blockId = e.dataTransfer.getData(DRAG_KEYS.BLOCK_ID);
+    const sourceSection = e.dataTransfer.getData(DRAG_KEYS.SOURCE_SECTION);
+    const sourceIndex = Number(e.dataTransfer.getData(DRAG_KEYS.SOURCE_INDEX));
+    if (blockId && sourceSection && Number.isInteger(sourceIndex) && sourceIndex >= 0) {
+      onRemoveBlockFromResume(sourceSection, sourceIndex);
+    }
+    // The source element may be unmounted before its `dragend` fires,
+    // so explicitly clear the drag state here.
+    onCanvasDragEnd?.();
+  }, [onRemoveBlockFromResume, onCanvasDragEnd]);
 
   const handleDropZoneDragLeave = useCallback(() => {
-    setDragOver(false);
   }, []);
 
   const includedJobTypeIds = useMemo(
