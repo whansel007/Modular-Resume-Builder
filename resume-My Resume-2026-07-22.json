@@ -1,0 +1,126 @@
+{
+  "blocks": [
+    {
+      "id": "b1",
+      "type": "summary",
+      "jobTypes": [
+        "Software Development",
+        "Management"
+      ],
+      "content": {
+        "headline": "Senior Software Engineer",
+        "body": "Results-driven engineer with 8+ years of experience building scalable web applications and leading cross-functional teams."
+      }
+    },
+    {
+      "id": "b2",
+      "type": "experience",
+      "jobTypes": [
+        "Software Development"
+      ],
+      "content": {
+        "company": "TechCorp",
+        "role": "Senior Software Engineer",
+        "location": "San Francisco, CA",
+        "startDate": "2020",
+        "endDate": "Present",
+        "description": "Lead backend architecture for a high-traffic SaaS platform. Mentor junior engineers and drive CI/CD best practices."
+      }
+    },
+    {
+      "id": "b3",
+      "type": "experience",
+      "jobTypes": [
+        "Management"
+      ],
+      "content": {
+        "company": "StartupXYZ",
+        "role": "Engineering Manager",
+        "location": "Remote",
+        "startDate": "2017",
+        "endDate": "2020",
+        "description": "Managed a team of 10 engineers across two product squads. Improved delivery predictability by 40%."
+      }
+    },
+    {
+      "id": "b4",
+      "type": "education",
+      "jobTypes": [
+        "Software Development",
+        "Data Science"
+      ],
+      "content": {
+        "institution": "State University",
+        "degree": "Bachelor of Science",
+        "field": "Computer Science",
+        "startDate": "2012",
+        "endDate": "2016",
+        "gpa": "GPA: 3.8 / 4.0"
+      }
+    },
+    {
+      "id": "b5",
+      "type": "skills",
+      "jobTypes": [
+        "Technical Skills",
+        "Software Development"
+      ],
+      "content": {
+        "category": "Technical Skills",
+        "skills": "JavaScript, TypeScript, React, Node.js, Python, SQL, AWS, Docker"
+      }
+    }
+  ],
+  "resume": {
+    "id": "r1",
+    "title": "My Resume",
+    "templateId": "modern",
+    "sections": [
+      {
+        "id": "s1",
+        "title": "Summary",
+        "blockIds": [
+          "b1"
+        ]
+      },
+      {
+        "id": "s2",
+        "title": "Experience",
+        "blockIds": [
+          "b2",
+          "b3"
+        ]
+      },
+      {
+        "id": "s3",
+        "title": "Education",
+        "blockIds": [
+          "b4"
+        ]
+      },
+      {
+        "id": "s4",
+        "title": "Skills",
+        "blockIds": [
+          "b5"
+        ]
+      }
+    ]
+  },
+  "personalInfo": {
+    "name": "Your Name",
+    "contact": "your.email@example.com · City, Country · (123) 456-7890"
+  },
+  "jobTypes": [
+    "Software Development",
+    "Management",
+    "Technical Skills",
+    "Design",
+    "Product Management",
+    "Data Science",
+    "Marketing",
+    "Sales",
+    "Operations",
+    "Research"
+  ]
+}
