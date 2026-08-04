@@ -34,6 +34,7 @@ export default function App() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingBlockId, setEditingBlockId] = useState(null);
   const [tempBlock, setTempBlock] = useState({ type: 'summary', jobTypeIds: [] });
+  const [isCanvasBlockDragging, setIsCanvasBlockDragging] = useState(false);
 
   const [saveStatus, setSaveStatus] = useState(''); // '' | 'saving' | 'saved' | 'error'
   const exportPdf = useExportPdf();
@@ -641,6 +642,7 @@ export default function App() {
   const removeBlockFromSection = useCallback((sectionTitle, index) => {
     setResume((prev) => {
       const ids = [...(prev.sections[sectionTitle] || [])];
+      if (index < 0 || index >= ids.length) return prev;
       ids.splice(index, 1);
       return {
         ...prev,
@@ -683,6 +685,9 @@ export default function App() {
           jobTypes={jobTypes}
           onEditBlock={openEditBlockModal}
           onDeleteBlock={deleteBlock}
+          onRemoveBlockFromResume={removeBlockFromSection}
+          isCanvasBlockDragging={isCanvasBlockDragging}
+          onCanvasDragEnd={() => setIsCanvasBlockDragging(false)}
         />
 
         <ResumeCanvas
@@ -698,6 +703,8 @@ export default function App() {
           onReorderInCanvas={handleReorderInCanvas}
           onRemoveBlockFromSection={removeBlockFromSection}
           onEditBlock={openEditBlockModal}
+          onCanvasDragStart={() => setIsCanvasBlockDragging(true)}
+          onCanvasDragEnd={() => setIsCanvasBlockDragging(false)}
         />
 
         <div className={styles.rightPanel} data-print-hide>
