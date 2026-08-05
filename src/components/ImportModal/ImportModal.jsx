@@ -13,6 +13,19 @@ export default function ImportModal({ getAuthHeaders, onImport, onClose }) {
   const [useAI, setUseAI] = useState(false);
   const [result, setResult] = useState(null); // { parsed, viaAI, fileName, rawText }
   const [dragOver, setDragOver] = useState(false);
+  const [creating, setCreating] = useState(false);
+
+  // Persist the parsed blocks + resume. Takes a while (bulk block write),
+  // so the button shows a spinner until the dashboard navigates away.
+  const handleCreate = async () => {
+    if (creating) return;
+    setCreating(true);
+    try {
+      await onImport(result.parsed, `Imported — ${result.fileName.replace(/\.pdf$/i, '')}`);
+    } catch {
+      setCreating(false);
+    }
+  };
 
   const runParse = async (file, forceAI) => {
     setPhase('working');
@@ -91,11 +104,11 @@ export default function ImportModal({ getAuthHeaders, onImport, onClose }) {
     : {};
 
   return (
-    <div className={styles.overlay} onClick={onClose}>
+    <div className={styles.overlay} onClick={creating ? undefined : onClose}>
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
         <div className={styles.header}>
           <h3>Import Resume PDF</h3>
-          <button className={styles.closeBtn} onClick={onClose}>&times;</button>
+          <button className={styles.closeBtn} onClick={onClose} disabled={creating}>&times;</button>
         </div>
 
         {phase === 'idle' && (
@@ -185,18 +198,24 @@ export default function ImportModal({ getAuthHeaders, onImport, onClose }) {
             <div className={styles.footer}>
               <button
                 className={styles.primaryBtn}
-                onClick={() =>
-                  onImport(result.parsed, `Imported — ${result.fileName.replace(/\.pdf$/i, '')}`)
-                }
+                onClick={handleCreate}
+                disabled={creating}
               >
-                Create Resume
+                {creating && <span className={styles.btnSpinner} aria-hidden="true" />}
+                {creating ? 'Creating Resume…' : 'Create Resume'}
               </button>
               {!result.viaAI && (
-                <button className={styles.secondaryBtn} onClick={retryWithAI}>
+                <button
+                  className={styles.secondaryBtn}
+                  onClick={retryWithAI}
+                  disabled={creating}
+                >
                   Retry with AI
                 </button>
               )}
-              <button className={styles.cancelBtn} onClick={onClose}>Cancel</button>
+              <button className={styles.cancelBtn} onClick={onClose} disabled={creating}>
+                Cancel
+              </button>
             </div>
           </>
         )}

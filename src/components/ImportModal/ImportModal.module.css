@@ -98,6 +98,16 @@
 
 .aiToggle input {
   accent-color: var(--primary);
+  /* App.module.css has an unscoped global `input` rule (width:100%, padding,
+     margin) — reset it so the checkbox hugs its label text. */
+  width: auto;
+  flex-shrink: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
 }
 
 .working {
@@ -208,6 +218,24 @@
 .primaryBtn:active {
   transform: translate(2px, 2px);
   box-shadow: 1px 1px 0 var(--ink);
+}
+
+.primaryBtn:disabled {
+  cursor: wait;
+  opacity: 0.85;
+  transform: none;
+}
+
+/* Inline spinner shown on the Create Resume button while blocks/resume save */
+.btnSpinner {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 8px;
+  vertical-align: -1px;
+  background: #fff;
+  border: 1.5px solid var(--ink);
+  animation: importSpin 0.8s linear infinite;
 }
 
 .secondaryBtn {
