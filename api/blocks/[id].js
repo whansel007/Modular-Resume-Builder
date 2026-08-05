@@ -25,6 +25,9 @@ export default async function handler(req, res) {
     }
     
     await Block.findByIdAndDelete(blockId);
+    // Cascade-delete child variants stored in the library under this block.
+    // Resume-scoped variants belong to their resume and are left alone.
+    await Block.deleteMany({ owner: user.email, variantOf: blockId, resumeId: null });
     res.json({ success: true });
   } catch (err) {
     console.error('Block delete handler error:', err);

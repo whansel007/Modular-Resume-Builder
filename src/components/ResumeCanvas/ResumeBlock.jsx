@@ -1,7 +1,7 @@
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, isVariant = false, onRemove, onEdit, onDuplicate, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
+export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, variantKind = null, onRemove, onEdit, onDuplicate, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
     e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
@@ -29,13 +29,17 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      {isVariant && (
+      {variantKind && (
         <span
           className={styles.variantBadge}
           data-print-hide
-          title="Variant — this copy only applies to this resume"
+          title={
+            variantKind === 'resume'
+              ? 'Variant — this copy only applies to this resume'
+              : 'Child variant — a copy of a library block, saved under its parent'
+          }
         >
-          Variant
+          {variantKind === 'resume' ? 'Variant' : 'Child Variant'}
         </span>
       )}
       <div className={styles.blockActions} data-print-hide>

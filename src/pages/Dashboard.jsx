@@ -7,6 +7,53 @@ import { generateId } from '../utils/id';
 import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/prefetch';
 import styles from './Dashboard.module.css';
 
+// Popup listing all child variants saved under a library block.
+function VariantsModal({ parent, variants, getDisplayText, onClose, onEdit, onDuplicate }) {
+  const parentName = parent.name || `${BLOCK_SCHEMA[parent.type]?.label || ''} block`;
+  return (
+    <div className={styles.variantsOverlay} onClick={onClose}>
+      <div className={styles.variantsPanel} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.variantsHeader}>
+          <h3>Variants of “{parentName}”</h3>
+          <button className={styles.variantsClose} onClick={onClose}>
+            &times;
+          </button>
+        </div>
+        {variants.length === 0 ? (
+          <p className={styles.emptyText}>No variants yet.</p>
+        ) : (
+          <ul className={styles.variantList}>
+            {variants.map((v) => (
+              <li key={v._id || v.id} className={styles.variantItem}>
+                <div className={styles.variantInfo}>
+                  <strong>{v.name || `${BLOCK_SCHEMA[v.type]?.label || ''} variant`}</strong>
+                  <span>{getDisplayText(v)}</span>
+                </div>
+                <div className={styles.cardActions}>
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => onDuplicate(v)}
+                    title="Duplicate variant"
+                  >
+                    &#10697;
+                  </button>
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => onEdit(v)}
+                    title="Edit variant"
+                  >
+                    ✎
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(() => JSON.parse(localStorage.getItem('auth-user') || 'null'));
@@ -48,6 +95,8 @@ export default function Dashboard() {
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [editingBlockId, setEditingBlockId] = useState(null);
   const [tempBlock, setTempBlock] = useState({ type: 'summary', jobTypeIds: [] });
+  // Variants popup: the parent block whose child variants are being shown
+  const [variantsModalBlock, setVariantsModalBlock] = useState(null);
 
   // Job type management state
   const [newJobTypeName, setNewJobTypeName] = useState('');
@@ -157,6 +206,7 @@ export default function Dashboard() {
       id: newId,
       owner,
       type: block.type,
+      name: block.name || '',
       jobTypeIds: block.jobTypeIds || [],
       ...(block.resumeId
         ? { resumeId: block.resumeId, variantOf: block.variantOf || block._id }
@@ -185,6 +235,49 @@ export default function Dashboard() {
     } catch (err) {
       console.error('Duplicate block error:', err);
       setError('Failed to duplicate block');
+    }
+  };
+
+  // Save the block being edited as a CHILD VARIANT: a copy stored in the
+  // library under the parent block, listed in its Variants popup.
+  const saveBlockAsChildVariant = async () => {
+    if (!editingBlockId) return;
+    const owner = user?.email || DEFAULT_OWNER;
+    const newId = generateId();
+
+    // Flatten the temp block, dropping ids/metadata; explicit fields after
+    // the spread win (forces the child-variant scope).
+    const { id: _id1, _id: _id2, owner: _o, content: _c, jobTypes: _jt, createdAt: _ca, updatedAt: _ua, __v: _v, ...fields } = tempBlock;
+    const blockData = {
+      ...fields,
+      id: newId,
+      owner,
+      type: tempBlock.type,
+      name: tempBlock.name || '',
+      jobTypeIds: tempBlock.jobTypeIds || [],
+      variantOf: editingBlockId,
+      resumeId: null,
+    };
+
+    try {
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(blockData),
+      });
+
+      if (!res.ok) throw new Error('Failed to save child variant');
+      const saved = await res.json();
+
+      setBlocks((prev) => [...prev, saved]);
+      invalidatePrefetch('blocks');
+      closeBlockModal();
+    } catch (err) {
+      console.error('Save child variant error:', err);
+      setError('Failed to save child variant');
     }
   };
 
@@ -351,9 +444,13 @@ export default function Dashboard() {
     return (jobTypeIds || []).map((id) => jobTypes[id] || id).filter(Boolean);
   };
 
-  // Resume-scoped variants live only on their resume — keep them out of the
-  // shared "My Blocks" list, same as the builder's library.
-  const libraryBlocks = blocks.filter((b) => !b.resumeId);
+  // Resume-scoped variants live only on their resume, and child variants
+  // live under their parent's Variants popup — neither shows as a card.
+  const libraryBlocks = blocks.filter((b) => !b.resumeId && !b.variantOf);
+
+  // Child variants grouped by parent id, for the Variants popup.
+  const childrenOf = (block) =>
+    blocks.filter((b) => b.variantOf === (block._id || block.id) && !b.resumeId);
 
   return (
     <div className={styles.container}>
@@ -459,13 +556,27 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className={styles.cardGrid}>
-              {libraryBlocks.map((block) => (
+              {libraryBlocks.map((block) => {
+                const variants = childrenOf(block);
+                return (
                 <div key={block._id || block.id} className={styles.card}>
                   <div className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>
-                      {BLOCK_SCHEMA[block.type]?.label || block.type?.charAt(0).toUpperCase() + block.type?.slice(1)}
+                      {block.name || `${BLOCK_SCHEMA[block.type]?.label || ''} block`}
                     </h3>
+                    <span className={styles.typeChip}>
+                      {BLOCK_SCHEMA[block.type]?.label || block.type}
+                    </span>
                     <div className={styles.cardActions}>
+                      {variants.length > 0 && (
+                        <button
+                          className={styles.variantsBtn}
+                          onClick={() => setVariantsModalBlock(block)}
+                          title="Show all child variants of this block"
+                        >
+                          Variants ({variants.length})
+                        </button>
+                      )}
                       <button
                         className={styles.editBtn}
                         onClick={() => duplicateBlock(block)}
@@ -489,7 +600,8 @@ export default function Dashboard() {
                     ))}
                   </p>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -550,7 +662,22 @@ export default function Dashboard() {
             invalidatePrefetch('jobtypes');
           }}
           onSave={saveBlock}
+          onSaveChildVariant={saveBlockAsChildVariant}
           onClose={closeBlockModal}
+        />
+      )}
+
+      {variantsModalBlock && (
+        <VariantsModal
+          parent={variantsModalBlock}
+          variants={childrenOf(variantsModalBlock)}
+          getDisplayText={getBlockDisplayText}
+          onClose={() => setVariantsModalBlock(null)}
+          onEdit={(variant) => {
+            setVariantsModalBlock(null);
+            openEditBlockModal(variant);
+          }}
+          onDuplicate={(variant) => duplicateBlock(variant)}
         />
       )}
 

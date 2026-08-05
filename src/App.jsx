@@ -376,11 +376,12 @@ export default function App() {
     const blockId = editingBlockId || generateId();
     
     // Prepare block data for API (flatten content fields)
-    const { jobTypeIds, type, ...contentFields } = tempBlock;
+    const { jobTypeIds, type, name, ...contentFields } = tempBlock;
     const blockData = {
       id: blockId,
       owner,
       type,
+      name: name || '',
       jobTypeIds: jobTypeIds || [],
       ...contentFields,
     };
@@ -428,12 +429,13 @@ export default function App() {
     const resumeId =
       resume._id || (resume.id && resume.id !== 'r1' ? resume.id : `r-${Date.now()}`);
 
-    const { jobTypeIds, type, ...contentFields } = tempBlock;
+    const { jobTypeIds, type, name, ...contentFields } = tempBlock;
     const blockData = {
       ...contentFields,
       id: variantId,
       owner,
       type,
+      name: name || '',
       jobTypeIds: jobTypeIds || [],
       resumeId,
       variantOf: editingBlockId,
@@ -474,6 +476,50 @@ export default function App() {
       alert('Failed to save block variant to server');
     }
   }, [editingBlockId, tempBlock, resume, setBlocks, setResume, closeModal, user?.email]);
+
+  // Save the block being edited as a CHILD VARIANT: a copy stored in the
+  // library under the parent block (variantOf set, resumeId null). It shows
+  // up in the parent's variant dropdown and can be dragged onto any resume.
+  const saveBlockAsChildVariant = useCallback(async () => {
+    if (!editingBlockId) return;
+    const owner = user?.email || DEFAULT_OWNER;
+    const variantId = generateId();
+
+    const { jobTypeIds, type, name, ...contentFields } = tempBlock;
+    const blockData = {
+      ...contentFields,
+      id: variantId,
+      owner,
+      type,
+      name: name || '',
+      jobTypeIds: jobTypeIds || [],
+      variantOf: editingBlockId,
+      resumeId: null,
+    };
+
+    try {
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(blockData),
+      });
+
+      if (!res.ok) throw new Error('Failed to save child variant');
+
+      setBlocks((prev) => [
+        ...prev,
+        { ...tempBlock, id: variantId, variantOf: editingBlockId, resumeId: null },
+      ]);
+      invalidatePrefetch('blocks');
+      closeModal();
+    } catch (err) {
+      console.error('Save child variant error:', err);
+      alert('Failed to save child variant to server');
+    }
+  }, [editingBlockId, tempBlock, setBlocks, closeModal, user?.email]);
 
   // Duplicate a block: creates a full copy with a new id and opens the
   // editor on the copy so it can be tweaked right away. Variants stay
@@ -555,8 +601,9 @@ export default function App() {
 
       if (!res.ok) throw new Error('Failed to delete block');
 
-      // Update local state
-      setBlocks((prev) => prev.filter((b) => b.id !== blockId));
+      // Update local state (child variants of the deleted block go with it;
+      // resume-scoped variants stay on their resume).
+      setBlocks((prev) => prev.filter((b) => b.id !== blockId && !(b.variantOf === blockId && !b.resumeId)));
       setResume((prev) => {
         const newSections = { ...prev.sections };
         for (const key of Object.keys(newSections)) {
@@ -977,6 +1024,7 @@ export default function App() {
           onAddCustomJobType={addCustomJobType}
           onSave={saveBlock}
           onSaveVariant={saveBlockAsVariant}
+          onSaveChildVariant={saveBlockAsChildVariant}
           onClose={closeModal}
         />
       )}

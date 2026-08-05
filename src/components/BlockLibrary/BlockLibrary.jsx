@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { BLOCK_SCHEMA, SECTION_TYPES } from '../../utils/constants';
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './BlockLibrary.module.css';
@@ -8,6 +8,10 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('all');
   const [jobTypeModes, setJobTypeModes] = useState({}); // { jt1: 'include', jt2: 'require', ... }
+  // Variant dropdown: which parent card is open, and which variant each
+  // parent card currently shows/drags (null = the parent itself).
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [pickedVariants, setPickedVariants] = useState({});
   const dragOver = isCanvasBlockDragging;
 
   const jobTypeEntries = Object.entries(jobTypes); // [[id, name], ...]
@@ -47,9 +51,10 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
 
   const filtered = useMemo(() => {
     return blocks.filter((b) => {
-      // Resume-scoped variants live only on their resume's canvas, never in
-      // the shared library.
-      if (b.resumeId) return false;
+      // Resume-scoped variants live only on their resume's canvas, and child
+      // variants live under their parent's dropdown — neither shows as a
+      // standalone library card.
+      if (b.resumeId || b.variantOf) return false;
       const blockJobTypeIds = b.jobTypeIds || [];
       const matchesSearch =
         !searchQuery ||
@@ -64,6 +69,35 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
   }, [blocks, searchQuery, selectedSection, includedJobTypeIds, requiredJobTypeIds]);
 
   const CYCLE = { off: 'include', include: 'require', require: 'off' };
+
+  // Child variants grouped by parent id (library-scoped only).
+  const childrenByParent = useMemo(() => {
+    const map = {};
+    for (const b of blocks) {
+      if (b.variantOf && !b.resumeId) {
+        (map[b.variantOf] ||= []).push(b);
+      }
+    }
+    return map;
+  }, [blocks]);
+
+  // Close the variant dropdown on any outside click.
+  useEffect(() => {
+    if (!openDropdownId) return;
+    const close = () => setOpenDropdownId(null);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [openDropdownId]);
+
+  const pickVariant = (parentId, variantId) => {
+    setPickedVariants((prev) => {
+      const next = { ...prev };
+      if (variantId) next[parentId] = variantId;
+      else delete next[parentId];
+      return next;
+    });
+    setOpenDropdownId(null);
+  };
 
   const cycleJobType = (jtId) => {
     setJobTypeModes((prev) => {
@@ -162,18 +196,69 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
           {filtered.map((block) => {
             const schema = BLOCK_SCHEMA[block.type];
             if (!schema) return null;
-            const rendered = schema.render(block);
-            const blockJobTypeIds = block.jobTypeIds || [];
+            const childVariants = childrenByParent[block.id] || [];
+            // The card shows/drags the picked child variant, or the parent.
+            const pickedId = pickedVariants[block.id];
+            const active =
+              (pickedId && blocks.find((b) => b.id === pickedId)) || block;
+            const activeSchema = BLOCK_SCHEMA[active.type] || schema;
+            const rendered = activeSchema.render(active);
+            const blockJobTypeIds = active.jobTypeIds || [];
+            const isShowingVariant = active.id !== block.id;
             return (
               <div
                 key={block.id}
                 className={styles.blockCard}
                 data-block-type={block.type}
+                data-block-id={block.id}
                 draggable
-                onDragStart={(e) => handleDragStart(e, block.id)}
+                onDragStart={(e) => handleDragStart(e, active.id)}
                 onDragEnd={handleDragEnd}
+                onClick={
+                  childVariants.length > 0
+                    ? () => setOpenDropdownId((prev) => (prev === block.id ? null : block.id))
+                    : undefined
+                }
               >
-                <h4>{schema.label}</h4>
+                <div className={styles.cardHeader}>
+                  <h4 title={active.name || `${schema.label} block`}>
+                    {active.name || `${schema.label} block`}
+                  </h4>
+                  {childVariants.length > 0 && (
+                    <span
+                      className={styles.variantToggle}
+                      title="This block has child variants — click to pick one"
+                    >
+                      &#9662; {childVariants.length}
+                    </span>
+                  )}
+                  <span className={styles.typeChip}>{schema.label}</span>
+                </div>
+
+                {openDropdownId === block.id && (
+                  <div className={styles.variantMenu} onClick={(e) => e.stopPropagation()}>
+                    <button
+                      className={!isShowingVariant ? styles.variantMenuActive : ''}
+                      onClick={() => pickVariant(block.id, null)}
+                    >
+                      {block.name || `${schema.label} block`} (original)
+                    </button>
+                    {childVariants.map((v) => (
+                      <button
+                        key={v.id}
+                        className={pickedId === v.id ? styles.variantMenuActive : ''}
+                        onClick={() => pickVariant(block.id, v.id)}
+                      >
+                        {v.name || `${BLOCK_SCHEMA[v.type]?.label || v.type} variant`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {isShowingVariant && (
+                  <div className={styles.variantPicked}>&#8627; variant of {block.name || `${schema.label} block`}</div>
+                )}
+
                 <div className={styles.meta}>
                   {rendered.title}
                   {rendered.subtitle ? ` · ${rendered.subtitle}` : ''}
@@ -184,20 +269,20 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
                     <span key={jtId} className={styles.tag}>{jobTypes[jtId] || jtId}</span>
                   ))}
                 </div>
-                <div className={styles.actions}>
-                  <button className={styles.small} onClick={() => onEditBlock(block.id)}>
+                <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
+                  <button className={styles.small} onClick={() => onEditBlock(active.id)}>
                     Edit
                   </button>
                   <button
                     className={styles.small}
-                    onClick={() => onDuplicateBlock?.(block.id)}
+                    onClick={() => onDuplicateBlock?.(active.id)}
                     title="Duplicate this block to build a similar one"
                   >
                     Duplicate
                   </button>
                   <button
                     className={`${styles.small} ${styles.danger}`}
-                    onClick={() => onDeleteBlock(block.id)}
+                    onClick={() => onDeleteBlock(active.id)}
                   >
                     Delete
                   </button>

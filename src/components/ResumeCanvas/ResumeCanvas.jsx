@@ -145,7 +145,7 @@ export default function ResumeCanvas({
                       sectionId={sectionTitle}
                       index={idx}
                       rendered={rendered}
-                      isVariant={!!block.resumeId}
+                      variantKind={block.resumeId ? 'resume' : block.variantOf ? 'child' : null}
                       onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
                       onEdit={() => onEditBlock(blockId)}
                       onDuplicate={() => onDuplicateBlock?.(blockId, sectionTitle)}

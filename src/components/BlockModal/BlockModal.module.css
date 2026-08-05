@@ -140,6 +140,28 @@
   filter: brightness(0.95);
 }
 
+/* Child variant: copy saved into the library under its parent block */
+.childVariantBtn {
+  background: #d9f2e3;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.childVariantBtn:hover {
+  background: #d9f2e3;
+  filter: brightness(0.95);
+}
+
+/* Small helper text under the Block Name input */
+.nameHint {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
 /* Scope banner shown when editing a resume-scoped variant block */
 .variantNote {
   margin: 0;
