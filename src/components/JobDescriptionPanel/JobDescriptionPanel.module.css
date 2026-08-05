@@ -74,6 +74,32 @@
   cursor: not-allowed;
 }
 
+/* Animated ellipsis for long-running actions: ... → .. → . → ...
+   Fixed-width slot so the button label doesn't shift while animating. */
+.dots {
+  display: inline-block;
+  width: 3.5ch;
+  overflow: hidden;
+  vertical-align: bottom;
+}
+
+.dots::before {
+  content: '...';
+  display: inline-block;
+  white-space: nowrap;
+  text-align: left;
+  animation: dotsCycle 1.5s steps(3, end) infinite;
+}
+
+@keyframes dotsCycle {
+  0% {
+    width: 3.5ch;
+  }
+  100% {
+    width: 0;
+  }
+}
+
 .clearBtn {
   padding: 0.6rem 1rem;
   background: var(--panel);
