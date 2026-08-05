@@ -491,6 +491,17 @@
   margin: 0;
 }
 
+/* Duplicate/edit actions pinned to the bottom right of a block card so the
+   Variants button in the header never crowds them out */
+.cardFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1.5px solid var(--border);
+}
+
 .tag {
   display: inline-block;
   padding: 2px 8px;
