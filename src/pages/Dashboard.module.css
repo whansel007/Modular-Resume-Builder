@@ -136,6 +136,45 @@
   margin-bottom: 16px;
 }
 
+.sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Opens the Import Resume PDF modal */
+.importBtn {
+  display: inline-block;
+  padding: 9px 16px;
+  background: var(--yellow);
+  color: var(--ink);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.importBtn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
+}
+
+.importBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.importBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* Section titles: mono spec labels with ink rule */
 .sectionTitle {
   font-family: var(--font-mono);

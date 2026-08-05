@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BlockModal from '../components/BlockModal/BlockModal';
 import AccountModal from '../components/AccountModal/AccountModal';
+import ImportModal from '../components/ImportModal/ImportModal';
 import { BLOCK_SCHEMA, DEFAULT_OWNER } from '../utils/constants';
 import { generateId } from '../utils/id';
 import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/prefetch';
@@ -68,6 +69,10 @@ export default function Dashboard() {
   // Holds the user's saved default personal info.
   const [accountModalOpen, setAccountModalOpen] = useState(false);
   const [defaultInfo, setDefaultInfo] = useState(null);
+
+  // Import-resume-PDF modal
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -388,6 +393,87 @@ export default function Dashboard() {
 
   // ---------- Resume CRUD ----------
 
+  // Persist a parsed PDF import: bulk-create the blocks, assemble them
+  // into a new resume, then jump straight into the builder on it.
+  const handlePdfImport = async (parsed, title) => {
+    const owner = user?.email || DEFAULT_OWNER;
+    setImporting(true);
+    try {
+      const docs = parsed.blocks.map(({ type, name, fields }) => ({
+        id: generateId(),
+        owner,
+        type,
+        name: name || '',
+        jobTypeIds: [],
+        ...(fields || {}),
+      }));
+
+      const bulkRes = await fetch('/api/blocks/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(docs),
+      });
+      if (!bulkRes.ok) throw new Error('Failed to save imported blocks');
+
+      const SECTION_TITLE = {
+        summary: 'Summary',
+        experience: 'Experience',
+        education: 'Education',
+        skills: 'Skills',
+      };
+      const sections = {};
+      const sectionOrder = [];
+      for (const doc of docs) {
+        const s = SECTION_TITLE[doc.type];
+        if (!s) continue;
+        if (!sections[s]) {
+          sections[s] = [];
+          sectionOrder.push(s);
+        }
+        sections[s].push(doc.id);
+      }
+
+      const resumeId = generateId();
+      const personalInfo = {
+        name: '',
+        email: '',
+        phone: '',
+        location: '',
+        ...(defaultInfo || {}), // account defaults fill any gaps
+        ...(parsed.personalInfo || {}), // extracted values win
+      };
+
+      const res = await fetch('/api/resumes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify({
+          id: resumeId,
+          owner,
+          title,
+          templateId: 'modern',
+          personalInfo,
+          sections,
+          sectionOrder,
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create resume');
+      const savedResume = await res.json();
+
+      setBlocks((prev) => [...prev, ...docs]);
+      setResumes((prev) => [savedResume, ...prev]);
+      invalidatePrefetch('blocks');
+      invalidatePrefetch('resumes');
+      setImportModalOpen(false);
+      navigate(`/builder?resume=${savedResume._id || resumeId}`);
+    } catch (err) {
+      console.error('PDF import save error:', err);
+      setError('Failed to save the imported resume');
+      setImportModalOpen(false);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const copyResume = async (resume) => {
     try {
       const owner = user?.email || DEFAULT_OWNER;
@@ -486,9 +572,19 @@ export default function Dashboard() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>My Resumes ({resumes.length})</h2>
-            <Link to="/builder?new=true" className={styles.createBtn}>
-              + New Resume
-            </Link>
+            <div className={styles.sectionActions}>
+              <button
+                className={styles.importBtn}
+                onClick={() => setImportModalOpen(true)}
+                disabled={importing}
+                title="Upload a resume PDF and turn it into blocks"
+              >
+                {importing ? 'Importing…' : '⇑ Import PDF'}
+              </button>
+              <Link to="/builder?new=true" className={styles.createBtn}>
+                + New Resume
+              </Link>
+            </div>
           </div>
           {loading ? (
             <div className={styles.emptyState}>
@@ -687,6 +783,14 @@ export default function Dashboard() {
           initial={defaultInfo}
           onSave={saveDefaultInfo}
           onClose={() => setAccountModalOpen(false)}
+        />
+      )}
+
+      {importModalOpen && (
+        <ImportModal
+          getAuthHeaders={getAuthHeaders}
+          onImport={handlePdfImport}
+          onClose={() => setImportModalOpen(false)}
         />
       )}
     </div>
