@@ -78,6 +78,12 @@
 
     ol strong { color: #274bff; }
 
+    /* Single text container per step — without it, the text runs around
+       <strong> become separate flex items and can't wrap. */
+    ol li > span {
+      min-width: 0;
+    }
+
     .note {
       font-size: 12px;
       line-height: 1.45;
@@ -168,9 +174,9 @@
   <p class="tagline">Companion for Modular Resume Builder</p>
 
   <ol>
-    <li>Open any <strong>LinkedIn job posting</strong> in this tab.</li>
-    <li>Click <strong>Autofill in Resume Builder</strong> below.</li>
-    <li>A fresh resume opens with the JD already extracted &amp; auto-filled.</li>
+    <li><span>Open any <strong>LinkedIn job posting</strong> in this tab.</span></li>
+    <li><span>Click <strong>Autofill in Resume Builder</strong> below.</span></li>
+    <li><span>A fresh resume opens with the JD already extracted &amp; auto-filled.</span></li>
   </ol>
 
   <button id="open-builder" class="btn">⚡ Autofill in Resume Builder</button>
