@@ -140,8 +140,11 @@
   filter: brightness(0.95);
 }
 
-/* Child variant: copy saved into the library under its parent block */
+/* Child variant: copy saved into the library under its parent block.
+   Hidden for now — the child variant flow will be reworked later; the button
+   and its logic are left intact so it can be re-enabled by removing this. */
 .childVariantBtn {
+  display: none;
   background: #d9f2e3;
   color: var(--ink);
   border-color: var(--ink);
