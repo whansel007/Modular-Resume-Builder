@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useExportPdf } from './hooks/useExportPdf';
@@ -24,7 +24,9 @@ import styles from './App.module.css';
 export default function App() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const user = JSON.parse(localStorage.getItem('auth-user') || 'null');
+  // Read once: auth data only changes on routes that unmount this component.
+  // A stable reference keeps the redirect effect from re-running every render.
+  const user = useMemo(() => JSON.parse(localStorage.getItem('auth-user') || 'null'), []);
 
   const [blocks, setBlocks, resetBlocks] = useLocalStorage('resume-builder-blocks', INITIAL_BLOCKS);
   const [resume, setResume, resetResume] = useLocalStorage('resume-builder-canvas', INITIAL_RESUME);
@@ -61,17 +63,29 @@ export default function App() {
 
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
+    if (!user?.email) return;
     fetch('/api/user/jobtypes', { headers: getAuthHeaders() })
       .then((res) => {
+        // A 401 here means the stored token has expired or been revoked while
+        // auth-user is still present. Clear the session and send the user to
+        // login so they aren't stuck behind the redirect gate with a dead token.
+        if (res.status === 401) {
+          localStorage.removeItem('auth-token');
+          localStorage.removeItem('auth-user');
+          navigate('/login');
+          return null;
+        }
         if (!res.ok) throw new Error(`Job types request failed (${res.status})`);
         return res.json();
       })
-      .then(setJobTypes)
+      .then((data) => {
+        if (data) setJobTypes(data);
+      })
       .catch((err) => {
         console.error('Failed to fetch job types:', err);
         setJobTypes(DEFAULT_JOB_TYPES_MAP);
       });
-  }, [user?.email]);
+  }, [user?.email, navigate]);
 
   // ---------- Reset resume if ?new=true ----------
   useEffect(() => {
