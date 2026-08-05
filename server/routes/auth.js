@@ -9,7 +9,7 @@ const SALT_ROUNDS = 10;
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, name } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
@@ -24,7 +24,14 @@ router.post('/register', async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    const user = await User.create({ email: email.toLowerCase(), passwordHash });
+    // Seed the account's default personal info with the name given at
+    // registration so new resumes already have it prefilled.
+    const cleanName = typeof name === 'string' ? name.trim() : '';
+    const user = await User.create({
+      email: email.toLowerCase(),
+      passwordHash,
+      defaultPersonalInfo: { name: cleanName },
+    });
 
     const token = jwt.sign({ userId: user._id, email: user.email }, process.env.JWT_SECRET, {
       expiresIn: '7d',
