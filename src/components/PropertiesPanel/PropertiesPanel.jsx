@@ -1,7 +1,14 @@
 import { TEMPLATES } from '../../utils/constants';
 import styles from './PropertiesPanel.module.css';
 
-export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, onUpdatePersonalInfo }) {
+export default function PropertiesPanel({
+  resume,
+  personalInfo,
+  onSetTemplate,
+  onUpdatePersonalInfo,
+  onSaveDefaultPersonalInfo,
+  saveDefaultStatus = '',
+}) {
   return (
     <aside className={styles.panel} data-print-hide>
       {/* Tab bar above already labels this view — no repeated header */}
@@ -53,6 +60,22 @@ export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, o
             onChange={(e) => onUpdatePersonalInfo('location', e.target.value)}
           />
         </div>
+        {/* Save this resume's personal info as the account default used to
+            prefill every new resume (also editable via Dashboard → email). */}
+        <button
+          className={styles.saveDefaultBtn}
+          onClick={onSaveDefaultPersonalInfo}
+          disabled={saveDefaultStatus === 'saving'}
+          title="Use these details to prefill new resumes"
+        >
+          {saveDefaultStatus === 'saving'
+            ? 'Saving...'
+            : saveDefaultStatus === 'saved'
+              ? '✓ Saved as Default'
+              : saveDefaultStatus === 'error'
+                ? 'Failed — try again'
+                : 'Save as Default'}
+        </button>
 
         <label className={styles.labelSpacer}>Tips</label>
         <p className={styles.tipText}>

@@ -46,6 +46,12 @@ export default function App() {
   const [activeRightTab, setActiveRightTab] = useState('properties'); // 'properties' | 'jobDescription'
   const [extractedKeywords, setExtractedKeywords] = useState([]);
 
+  // Account-level default personal info (name/email/phone/location). null
+  // while the fetch is in flight; {} when the user never saved any. Used to
+  // prefill new resumes and saved via the Properties panel button.
+  const [defaultPersonalInfo, setDefaultPersonalInfo] = useState(null);
+  const [saveDefaultStatus, setSaveDefaultStatus] = useState(''); // '' | 'saving' | 'saved' | 'error'
+
   // Deep-link import from the "Copy JD" browser extension. main.jsx stashes
   // the payload in sessionStorage (so it survives the login redirect); read
   // it here, consume it in the fresh-resume effect below.
@@ -106,20 +112,58 @@ export default function App() {
       });
   }, [user?.email, navigate]);
 
+  // ---------- Fetch saved default personal info ----------
+  useEffect(() => {
+    if (!user?.email) return;
+    getOrFetch('defaults', '/api/user/defaults')
+      .then((data) => setDefaultPersonalInfo(data))
+      .catch(() => setDefaultPersonalInfo({})); // treat fetch failure as "no defaults"
+  }, [user?.email]);
+
+  // ---------- Save current personal info as the account default ----------
+  const saveDefaultPersonalInfo = useCallback(async () => {
+    setSaveDefaultStatus('saving');
+    try {
+      const res = await fetch('/api/user/defaults', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+        body: JSON.stringify(resume.personalInfo || {}),
+      });
+      if (!res.ok) throw new Error('Failed to save defaults');
+      const saved = await res.json();
+      setDefaultPersonalInfo(saved);
+      invalidatePrefetch('defaults');
+      setSaveDefaultStatus('saved');
+    } catch (err) {
+      console.error('Save default personal info error:', err);
+      setSaveDefaultStatus('error');
+    } finally {
+      setTimeout(() => setSaveDefaultStatus(''), 2000);
+    }
+  }, [resume.personalInfo]);
+
   // ---------- Reset resume if ?new=true (or an extension deep link arrived) ----------
   useEffect(() => {
     // While logged out the builder redirects to /login anyway; leaving the
     // payload untouched lets the Dashboard resume the flow after sign-in.
     if (!user?.email) return;
     if (searchParams.get('new') !== 'true' && !extImport) return;
+    // Wait for the defaults fetch to settle so prefilled values aren't lost
+    // to a late response re-running this effect.
+    if (defaultPersonalInfo === null) return;
     if (extImport && extConsumedRef.current) {
       setSearchParams({});
       return;
     }
     if (extImport) extConsumedRef.current = true;
 
+    // New resumes start from the account's saved personal details (if any).
+    const blankWithDefaults = {
+      ...BLANK_RESUME,
+      personalInfo: { ...BLANK_RESUME.personalInfo, ...defaultPersonalInfo },
+    };
     setResume(
-      extImport?.title ? { ...BLANK_RESUME, title: extImport.title } : BLANK_RESUME,
+      extImport?.title ? { ...blankWithDefaults, title: extImport.title } : blankWithDefaults,
     );
 
     // Fetch blocks from MongoDB for the authenticated user
@@ -148,7 +192,7 @@ export default function App() {
     }
 
     setSearchParams({});
-  }, [searchParams, setSearchParams, setResume, setBlocks, extImport, user?.email]);
+  }, [searchParams, setSearchParams, setResume, setBlocks, extImport, user?.email, defaultPersonalInfo]);
 
   // ---------- Fetch resume and blocks from MongoDB if ?resume=<id> ----------
   useEffect(() => {
@@ -776,6 +820,8 @@ export default function App() {
                 personalInfo={personalInfo}
                 onSetTemplate={setTemplate}
                 onUpdatePersonalInfo={updatePersonalInfoField}
+                onSaveDefaultPersonalInfo={saveDefaultPersonalInfo}
+                saveDefaultStatus={saveDefaultStatus}
               />
             </div>
             <div style={{ display: activeRightTab === 'jobDescription' ? 'contents' : 'none' }}>

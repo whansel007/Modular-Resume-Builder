@@ -26,6 +26,14 @@ const userSchema = new mongoose.Schema(
     // Set to true once an account has received its default job types, so the
     // one-time backfill never re-runs (including after the user deletes them all).
     jobTypesInitialized: { type: Boolean, default: false },
+    // Saved personal details used to prefill new resumes ("Save as Default" in
+    // the builder, editable from the Dashboard account modal). Empty until set.
+    defaultPersonalInfo: {
+      name: { type: String, default: '' },
+      email: { type: String, default: '' },
+      phone: { type: String, default: '' },
+      location: { type: String, default: '' },
+    },
   },
   { timestamps: true },
 );

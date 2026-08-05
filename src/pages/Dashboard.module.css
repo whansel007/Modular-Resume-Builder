@@ -38,6 +38,33 @@
   color: rgba(253, 252, 247, 0.7);
 }
 
+/* Clickable email — opens the Account Details modal */
+.emailBtn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 4px 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: rgba(253, 252, 247, 0.7);
+  cursor: pointer;
+  border-bottom: 1.5px dashed rgba(253, 252, 247, 0.4);
+  border-radius: 0;
+}
+
+.emailBtn:hover {
+  color: #fff;
+  border-bottom-color: #fff;
+  transform: none;
+  box-shadow: none;
+}
+
+.emailBtn:active {
+  transform: none;
+  box-shadow: none;
+}
+
 .refreshBtn {
   width: 34px;
   height: 34px;

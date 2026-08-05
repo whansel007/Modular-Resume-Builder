@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BlockModal from '../components/BlockModal/BlockModal';
+import AccountModal from '../components/AccountModal/AccountModal';
 import { BLOCK_SCHEMA, DEFAULT_OWNER } from '../utils/constants';
 import { generateId } from '../utils/id';
 import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/prefetch';
@@ -15,6 +16,11 @@ export default function Dashboard() {
   const [jobTypes, setJobTypes] = useState({}); // { jt1: "Software Development", ... }
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Account details modal (opened by clicking the email in the header).
+  // Holds the user's saved default personal info.
+  const [accountModalOpen, setAccountModalOpen] = useState(false);
+  const [defaultInfo, setDefaultInfo] = useState(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -220,6 +226,30 @@ export default function Dashboard() {
     }
   };
 
+  // ---------- Account defaults (prefill for new resumes) ----------
+
+  const openAccountModal = async () => {
+    setAccountModalOpen(true);
+    try {
+      const data = await getOrFetch('defaults', '/api/user/defaults');
+      setDefaultInfo(data);
+    } catch {
+      setDefaultInfo({});
+    }
+  };
+
+  const saveDefaultInfo = async (info) => {
+    const res = await fetch('/api/user/defaults', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify(info),
+    });
+    if (!res.ok) throw new Error('Failed to save account details');
+    const saved = await res.json();
+    setDefaultInfo(saved);
+    invalidatePrefetch('defaults');
+  };
+
   // ---------- Resume CRUD ----------
 
   const copyResume = async (resume) => {
@@ -283,7 +313,13 @@ export default function Dashboard() {
       <header className={styles.header}>
         <h1 className={styles.logo}>Modular Resume Builder</h1>
         <div className={styles.userSection}>
-          <span className={styles.email}>{user?.email}</span>
+          <button
+            className={styles.emailBtn}
+            onClick={openAccountModal}
+            title="Account details & default personal info"
+          >
+            {user?.email}
+          </button>
           <button
             onClick={() => {
               invalidatePrefetch(); // manual refresh bypasses the cache
@@ -459,6 +495,15 @@ export default function Dashboard() {
           }}
           onSave={saveBlock}
           onClose={closeBlockModal}
+        />
+      )}
+
+      {accountModalOpen && (
+        <AccountModal
+          userEmail={user?.email}
+          initial={defaultInfo}
+          onSave={saveDefaultInfo}
+          onClose={() => setAccountModalOpen(false)}
         />
       )}
     </div>

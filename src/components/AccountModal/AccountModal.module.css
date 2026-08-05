@@ -1,0 +1,131 @@
+/* ── Account Modal · Pressroom ─────────────────────────────── */
+/* Mirrors the BlockModal chrome so both dialogs read as one family. */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 39, 51, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal {
+  background: var(--panel);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  width: 440px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lift);
+}
+
+.modalHeader {
+  padding: 16px;
+  border-bottom: var(--border-w) solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--panel-2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  font-size: 20px;
+  padding: 0 4px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--ink);
+}
+
+.closeBtn:hover {
+  color: var(--danger);
+  transform: none;
+  box-shadow: none;
+}
+
+.modalBody {
+  padding: 16px;
+}
+
+.signedIn {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  color: var(--muted);
+}
+
+.signedIn strong {
+  color: var(--ink);
+}
+
+.hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.field {
+  margin-bottom: 6px;
+}
+
+.error {
+  margin: 10px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.success {
+  margin: 10px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--success, #1e9e55);
+}
+
+.modalFooter {
+  padding: 16px;
+  border-top: var(--border-w) solid var(--ink);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.secondaryBtn {
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.primaryBtn {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.primaryBtn:hover {
+  background: var(--primary-deep);
+}
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
