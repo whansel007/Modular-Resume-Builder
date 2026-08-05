@@ -3,7 +3,7 @@ import { BLOCK_SCHEMA, SECTION_TYPES } from '../../utils/constants';
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './BlockLibrary.module.css';
 
-export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBlock, onRemoveBlockFromResume = () => {}, isCanvasBlockDragging = false, onCanvasDragEnd }) {
+export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicateBlock, onDeleteBlock, onRemoveBlockFromResume = () => {}, isCanvasBlockDragging = false, onCanvasDragEnd }) {
   // jobTypes is now an object: { jt1: "Software Development", ... }
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSection, setSelectedSection] = useState('all');
@@ -187,6 +187,13 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
                 <div className={styles.actions}>
                   <button className={styles.small} onClick={() => onEditBlock(block.id)}>
                     Edit
+                  </button>
+                  <button
+                    className={styles.small}
+                    onClick={() => onDuplicateBlock?.(block.id)}
+                    title="Duplicate this block to build a similar one"
+                  >
+                    Duplicate
                   </button>
                   <button
                     className={`${styles.small} ${styles.danger}`}

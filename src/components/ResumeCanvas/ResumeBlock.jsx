@@ -1,7 +1,7 @@
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, isVariant = false, onRemove, onEdit, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
+export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, isVariant = false, onRemove, onEdit, onDuplicate, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
     e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
@@ -39,6 +39,13 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
         </span>
       )}
       <div className={styles.blockActions} data-print-hide>
+        <button
+          className={styles.iconBtn}
+          onClick={onDuplicate}
+          title="Duplicate — copy this block right after it to build a similar one"
+        >
+          &#10697;
+        </button>
         <button className={styles.iconBtn} onClick={onEdit} title="Edit">
           &#9998;
         </button>

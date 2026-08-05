@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = req.body;
+      const { id, _id, owner, type, jobTypeIds, resumeId, variantOf, ...contentFields } = req.body;
       
       // Check if block exists and verify ownership
       const existingBlock = await Block.findById(id);

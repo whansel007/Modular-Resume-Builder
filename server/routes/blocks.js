@@ -18,7 +18,7 @@ router.get('/', requireAuth, async (req, res) => {
 // POST upsert a block (uses _id from body)
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = req.body;
+    const { id, _id, owner, type, jobTypeIds, resumeId, variantOf, ...contentFields } = req.body;
     
     // Check if block exists and verify ownership
     const existingBlock = await Block.findById(id);
@@ -50,7 +50,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
     if (!Array.isArray(blocks)) return res.status(400).json({ error: 'Expected array of blocks' });
 
     const ops = blocks.map((b) => {
-      const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = b;
+      const { id, _id, owner, type, jobTypeIds, resumeId, variantOf, ...contentFields } = b;
       const update = { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields };
       if (resumeId !== undefined) update.resumeId = resumeId || null;
       if (variantOf !== undefined) update.variantOf = variantOf || null;

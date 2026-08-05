@@ -277,6 +277,12 @@
   gap: 8px;
 }
 
+.cardActions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 .cardTitle {
   font-family: var(--font-display);
   font-size: 14px;

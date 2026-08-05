@@ -17,6 +17,7 @@ export default function ResumeCanvas({
   onReorderInCanvas,
   onRemoveBlockFromSection,
   onEditBlock,
+  onDuplicateBlock,
   onCanvasDragStart = () => {},
   onCanvasDragEnd = () => {},
 }) {
@@ -147,6 +148,7 @@ export default function ResumeCanvas({
                       isVariant={!!block.resumeId}
                       onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
                       onEdit={() => onEditBlock(blockId)}
+                      onDuplicate={() => onDuplicateBlock?.(blockId, sectionTitle)}
                       formatBody={formatBody}
                       onCanvasDragStart={onCanvasDragStart}
                       onCanvasDragEnd={onCanvasDragEnd}

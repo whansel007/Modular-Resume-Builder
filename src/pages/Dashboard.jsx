@@ -148,6 +148,46 @@ export default function Dashboard() {
     }
   };
 
+  const duplicateBlock = async (block) => {
+    const owner = user?.email || DEFAULT_OWNER;
+    const newId = generateId();
+
+    // Variants copy their resume scope and lineage; library blocks stay global.
+    const blockData = {
+      id: newId,
+      owner,
+      type: block.type,
+      jobTypeIds: block.jobTypeIds || [],
+      ...(block.resumeId
+        ? { resumeId: block.resumeId, variantOf: block.variantOf || block._id }
+        : {}),
+      ...(block.content || {}),
+    };
+
+    try {
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(blockData),
+      });
+
+      if (!res.ok) throw new Error('Failed to duplicate block');
+      const saved = await res.json();
+
+      setBlocks((prev) => [...prev, saved]);
+      invalidatePrefetch('blocks');
+
+      // Open the editor on the copy for immediate tweaking.
+      openEditBlockModal(saved);
+    } catch (err) {
+      console.error('Duplicate block error:', err);
+      setError('Failed to duplicate block');
+    }
+  };
+
   // ---------- Job Type Management ----------
 
   const addJobType = async () => {
@@ -311,6 +351,10 @@ export default function Dashboard() {
     return (jobTypeIds || []).map((id) => jobTypes[id] || id).filter(Boolean);
   };
 
+  // Resume-scoped variants live only on their resume — keep them out of the
+  // shared "My Blocks" list, same as the builder's library.
+  const libraryBlocks = blocks.filter((b) => !b.resumeId);
+
   return (
     <div className={styles.container}>
       <header className={styles.header}>
@@ -400,7 +444,7 @@ export default function Dashboard() {
 
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>My Blocks ({blocks.length})</h2>
+            <h2 className={styles.sectionTitle}>My Blocks ({libraryBlocks.length})</h2>
             <button className={styles.createBtn} onClick={openNewBlockModal}>
               + New Block
             </button>
@@ -409,25 +453,34 @@ export default function Dashboard() {
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>Loading...</p>
             </div>
-          ) : blocks.length === 0 ? (
+          ) : libraryBlocks.length === 0 ? (
             <div className={styles.emptyState}>
               <p className={styles.emptyText}>No blocks yet. Blocks are reusable resume components.</p>
             </div>
           ) : (
             <div className={styles.cardGrid}>
-              {blocks.map((block) => (
+              {libraryBlocks.map((block) => (
                 <div key={block._id || block.id} className={styles.card}>
                   <div className={styles.cardHeader}>
                     <h3 className={styles.cardTitle}>
                       {BLOCK_SCHEMA[block.type]?.label || block.type?.charAt(0).toUpperCase() + block.type?.slice(1)}
                     </h3>
-                    <button
-                      className={styles.editBtn}
-                      onClick={() => openEditBlockModal(block)}
-                      title="Edit block"
-                    >
-                      ✎
-                    </button>
+                    <div className={styles.cardActions}>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => duplicateBlock(block)}
+                        title="Duplicate block"
+                      >
+                        &#10697;
+                      </button>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => openEditBlockModal(block)}
+                        title="Edit block"
+                      >
+                        ✎
+                      </button>
+                    </div>
                   </div>
                   <p className={styles.cardMeta}>{getBlockDisplayText(block)}</p>
                   <p className={styles.cardTags}>

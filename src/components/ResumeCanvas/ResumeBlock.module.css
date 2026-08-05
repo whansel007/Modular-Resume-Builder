@@ -80,9 +80,9 @@
   cursor: help;
 }
 
-/* Slide clear of the edit/remove buttons when they appear on hover */
+/* Slide clear of the duplicate/edit/remove buttons when they appear on hover */
 .resumeBlock:hover .variantBadge {
-  right: 66px;
+  right: 100px;
 }
 
 .iconBtn {

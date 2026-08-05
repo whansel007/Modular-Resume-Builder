@@ -475,6 +475,72 @@ export default function App() {
     }
   }, [editingBlockId, tempBlock, resume, setBlocks, setResume, closeModal, user?.email]);
 
+  // Duplicate a block: creates a full copy with a new id and opens the
+  // editor on the copy so it can be tweaked right away. Variants stay
+  // scoped to their resume. Pass targetSection (from a canvas block) to
+  // also drop the copy right after the original in that section.
+  const duplicateBlock = useCallback(async (blockId, targetSection = null) => {
+    const source = blocks.find((b) => b.id === blockId);
+    if (!source) return;
+    const owner = user?.email || DEFAULT_OWNER;
+    const newId = generateId();
+
+    // Variants copy their resume scope and lineage; library blocks stay global.
+    const resumeId = source.resumeId || null;
+    const variantOf = resumeId ? source.variantOf || source.id : null;
+
+    // Strip ids + server metadata that may ride along on flattened blocks,
+    // leaving only the actual content fields.
+    const META_KEYS = new Set(['id', '_id', 'owner', '__v', 'createdAt', 'updatedAt', 'content', 'type', 'jobTypeIds', 'resumeId', 'variantOf']);
+    const contentFields = Object.fromEntries(
+      Object.entries(source).filter(([k]) => !META_KEYS.has(k))
+    );
+    const blockData = {
+      ...contentFields,
+      id: newId,
+      owner,
+      type: source.type,
+      jobTypeIds: source.jobTypeIds || [],
+      ...(resumeId ? { resumeId, variantOf } : {}),
+    };
+
+    try {
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(blockData),
+      });
+
+      if (!res.ok) throw new Error('Failed to duplicate block');
+
+      const copy = { ...source, id: newId, resumeId, variantOf };
+      setBlocks((prev) => [...prev, copy]);
+
+      // Canvas duplicate: insert the copy right after the original.
+      if (targetSection) {
+        setResume((prev) => {
+          const ids = [...((prev.sections || {})[targetSection] || [])];
+          const idx = ids.indexOf(blockId);
+          ids.splice(idx === -1 ? ids.length : idx + 1, 0, newId);
+          return { ...prev, sections: { ...prev.sections, [targetSection]: ids } };
+        });
+      }
+
+      invalidatePrefetch('blocks');
+
+      // Open the editor on the copy for immediate tweaking.
+      setEditingBlockId(newId);
+      setTempBlock(JSON.parse(JSON.stringify(copy)));
+      setModalOpen(true);
+    } catch (err) {
+      console.error('Duplicate block error:', err);
+      alert('Failed to duplicate block');
+    }
+  }, [blocks, setBlocks, setResume, user?.email]);
+
   const deleteBlock = useCallback(async (blockId) => {
     if (!confirm('Delete this block from the library? It will also be removed from any resume using it.')) return;
     
@@ -835,6 +901,7 @@ export default function App() {
           blocks={blocks}
           jobTypes={jobTypes}
           onEditBlock={openEditBlockModal}
+          onDuplicateBlock={duplicateBlock}
           onDeleteBlock={deleteBlock}
           onRemoveBlockFromResume={removeBlockFromSection}
           isCanvasBlockDragging={isCanvasBlockDragging}
@@ -854,6 +921,7 @@ export default function App() {
           onReorderInCanvas={handleReorderInCanvas}
           onRemoveBlockFromSection={removeBlockFromSection}
           onEditBlock={openEditBlockModal}
+          onDuplicateBlock={duplicateBlock}
           onCanvasDragStart={() => setIsCanvasBlockDragging(true)}
           onCanvasDragEnd={() => setIsCanvasBlockDragging(false)}
         />

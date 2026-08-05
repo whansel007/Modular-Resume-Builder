@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       if (!Array.isArray(blocks)) return res.status(400).json({ error: 'Expected array of blocks' });
 
       const ops = blocks.map((b) => {
-        const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = b;
+        const { id, _id, owner, type, jobTypeIds, resumeId, variantOf, ...contentFields } = b;
         const update = { _id: id, owner: user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields };
         if (resumeId !== undefined) update.resumeId = resumeId || null;
         if (variantOf !== undefined) update.variantOf = variantOf || null;
