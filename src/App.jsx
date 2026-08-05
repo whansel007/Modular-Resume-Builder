@@ -54,7 +54,10 @@ export default function App() {
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
     fetch('/api/user/jobtypes', { headers: getAuthHeaders() })
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) throw new Error(`Job types request failed (${res.status})`);
+        return res.json();
+      })
       .then(setJobTypes)
       .catch((err) => {
         console.error('Failed to fetch job types:', err);

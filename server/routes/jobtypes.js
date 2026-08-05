@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import User from '../models/User.js';
+import User, { DEFAULT_JOB_TYPES } from '../models/User.js';
 import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
@@ -9,6 +9,16 @@ router.get('/', requireAuth, async (req, res) => {
   try {
     const user = await User.findOne({ email: req.user.email });
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // One-time backfill: accounts created before the schema-default change
+    // have jobTypes stored as {} and would otherwise stay empty forever.
+    if (!user.jobTypesInitialized) {
+      if (!user.jobTypes || user.jobTypes.size === 0) {
+        user.jobTypes = new Map(Object.entries(DEFAULT_JOB_TYPES));
+      }
+      user.jobTypesInitialized = true;
+      await user.save();
+    }
 
     // Convert Map to plain object
     const jobTypes = {};
