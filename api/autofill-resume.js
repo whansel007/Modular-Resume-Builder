@@ -1,3 +1,5 @@
+import { requireAuth } from './lib/auth.js';
+
 const DEFAULT_SECTIONS = ['Summary', 'Experience', 'Education', 'Skills'];
 
 function parseJsonFromText(content) {
@@ -34,6 +36,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const user = requireAuth(req, res);
+  if (!user) return;
 
   try {
     const { jobDescription, keywords, resume, blocks } = req.body || {};

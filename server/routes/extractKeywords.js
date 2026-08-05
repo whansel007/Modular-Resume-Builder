@@ -1,9 +1,10 @@
 import { Router } from 'express';
+import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
 
 // POST /api/extract-keywords - Extract keywords from job description using NVIDIA AI
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const { jobDescription } = req.body;
     

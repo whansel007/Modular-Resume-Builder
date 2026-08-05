@@ -1,3 +1,5 @@
+import { requireAuth } from './lib/auth.js';
+
 // Build a readable summary of the current resume with block content resolved
 function buildResumeContext(resume, blocks) {
   const blockMap = {};
@@ -38,6 +40,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const user = requireAuth(req, res);
+  if (!user) return;
 
   try {
     const { messages, resume, blocks } = req.body || {};

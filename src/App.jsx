@@ -51,6 +51,14 @@ export default function App() {
     'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
   });
 
+  // Redirect to login if not authenticated (the builder's save + AI features
+  // all require a session; anonymous edits cannot be persisted).
+  useEffect(() => {
+    if (!user?.email) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
     fetch('/api/user/jobtypes', { headers: getAuthHeaders() })

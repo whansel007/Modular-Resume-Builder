@@ -24,7 +24,15 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/resume-builder';
 
-app.use(cors());
+// Restrict cross-origin browser access to the API. Same-origin requests
+// (Vercel rewrites, the Vite dev proxy) are unaffected; only browsers from
+// other origins are blocked.
+const CORS_ORIGINS = (process.env.CORS_ORIGINS || 'http://localhost:5173,http://127.0.0.1:5173')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+app.use(cors({ origin: CORS_ORIGINS }));
 app.use(express.json({ limit: '5mb' }));
 
 app.use('/api/auth', authRouter);

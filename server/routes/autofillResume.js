@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
 
@@ -36,7 +37,7 @@ async function fetchWithRetry(url, options, attempts = 2) {
 
 // POST /api/autofill-resume - pick best-fit existing blocks for missing default sections.
 // IMPORTANT: never generates new content — only references the user's existing blocks.
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const { jobDescription, keywords, resume, blocks } = req.body || {};
 
