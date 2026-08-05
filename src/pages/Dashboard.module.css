@@ -311,9 +311,10 @@
 
 .cardHeader {
   display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
+  gap: 4px;
+  margin-bottom: 6px;
 }
 
 .cardActions {
@@ -491,15 +492,21 @@
   margin: 0;
 }
 
-/* Duplicate/edit actions pinned to the bottom right of a block card so the
-   Variants button in the header never crowds them out */
+/* Card footer: Variants button pinned bottom-left, duplicate/edit icons
+   bottom-right, so nothing crowds the header */
 .cardFooter {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
   gap: 6px;
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1.5px solid var(--border);
+}
+
+.cardFooterIcons {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
 }
 
 .tag {

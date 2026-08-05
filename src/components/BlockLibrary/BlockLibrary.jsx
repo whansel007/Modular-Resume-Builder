@@ -224,19 +224,6 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
                   <h4 title={active.name || `${schema.label} block`}>
                     {active.name || `${schema.label} block`}
                   </h4>
-                  {childVariants.length > 0 && (
-                    <button
-                      type="button"
-                      className={styles.variantToggle}
-                      title="Show this block's child variants"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenDropdownId((prev) => (prev === block.id ? null : block.id));
-                      }}
-                    >
-                      &#9662; {childVariants.length} {childVariants.length === 1 ? 'variant' : 'variants'}
-                    </button>
-                  )}
                   <span className={styles.typeChip}>{schema.label}</span>
                 </div>
 
@@ -274,31 +261,45 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
                     <span key={jtId} className={styles.tag}>{jobTypes[jtId] || jtId}</span>
                   ))}
                 </div>
-                <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
-                  <button
-                    className={styles.small}
-                    onClick={() => onEditBlock(active.id)}
-                    title="Edit block"
-                    aria-label="Edit block"
-                  >
-                    &#9998;
-                  </button>
-                  <button
-                    className={styles.small}
-                    onClick={() => onDuplicateBlock?.(active.id)}
-                    title="Duplicate this block to build a similar one"
-                    aria-label="Duplicate block"
-                  >
-                    &#10697;
-                  </button>
-                  <button
-                    className={`${styles.small} ${styles.danger}`}
-                    onClick={() => onDeleteBlock(active.id)}
-                    title="Delete block"
-                    aria-label="Delete block"
-                  >
-                    &#128465;
-                  </button>
+                <div className={styles.cardFooter} onClick={(e) => e.stopPropagation()}>
+                  {childVariants.length > 0 && (
+                    <button
+                      type="button"
+                      className={styles.variantToggle}
+                      title="Show this block's child variants"
+                      onClick={() =>
+                        setOpenDropdownId((prev) => (prev === block.id ? null : block.id))
+                      }
+                    >
+                      &#9662; {childVariants.length} {childVariants.length === 1 ? 'variant' : 'variants'}
+                    </button>
+                  )}
+                  <div className={styles.actions}>
+                    <button
+                      className={styles.small}
+                      onClick={() => onEditBlock(active.id)}
+                      title="Edit block"
+                      aria-label="Edit block"
+                    >
+                      &#9998;
+                    </button>
+                    <button
+                      className={styles.small}
+                      onClick={() => onDuplicateBlock?.(active.id)}
+                      title="Duplicate this block to build a similar one"
+                      aria-label="Duplicate block"
+                    >
+                      &#10697;
+                    </button>
+                    <button
+                      className={`${styles.small} ${styles.danger}`}
+                      onClick={() => onDeleteBlock(active.id)}
+                      title="Delete block"
+                      aria-label="Delete block"
+                    >
+                      &#128465;
+                    </button>
+                  </div>
                 </div>
               </div>
             );

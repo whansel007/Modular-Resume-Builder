@@ -252,10 +252,11 @@
   box-shadow: 2px 2px 0 var(--ink);
 }
 
-/* Dropdown listing the parent + its child variants */
+/* Dropdown listing the parent + its child variants — anchored above the
+   bottom-left toggle in the card footer */
 .variantMenu {
   position: absolute;
-  top: 40px;
+  bottom: 48px;
   left: 12px;
   right: 12px;
   z-index: 30;
@@ -340,6 +341,23 @@
   display: flex;
   gap: 6px;
   justify-content: flex-end;
+}
+
+/* Card footer: variant toggle bottom-left, action icons bottom-right.
+   Wraps on narrow cards so the icons never overflow the card edge. */
+.cardFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.cardFooter .actions {
+  margin-top: 0;
+  /* When the footer wraps on narrow cards, keep the icons right-aligned */
+  margin-left: auto;
 }
 
 .small {

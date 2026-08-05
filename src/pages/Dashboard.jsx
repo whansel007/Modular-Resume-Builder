@@ -657,12 +657,20 @@ export default function Dashboard() {
                 return (
                 <div key={block._id || block.id} className={styles.card}>
                   <div className={styles.cardHeader}>
-                    <h3 className={styles.cardTitle}>
-                      {block.name || `${BLOCK_SCHEMA[block.type]?.label || ''} block`}
-                    </h3>
                     <span className={styles.typeChip}>
                       {BLOCK_SCHEMA[block.type]?.label || block.type}
                     </span>
+                    <h3 className={styles.cardTitle}>
+                      {block.name || `${BLOCK_SCHEMA[block.type]?.label || ''} block`}
+                    </h3>
+                  </div>
+                  <p className={styles.cardMeta}>{getBlockDisplayText(block)}</p>
+                  <p className={styles.cardTags}>
+                    {resolveJobTypeNames(block.jobTypeIds || block.jobTypes).map((name) => (
+                      <span key={name} className={styles.tag}>{name}</span>
+                    ))}
+                  </p>
+                  <div className={styles.cardFooter}>
                     {variants.length > 0 && (
                       <button
                         className={styles.variantsBtn}
@@ -672,28 +680,22 @@ export default function Dashboard() {
                         Variants ({variants.length})
                       </button>
                     )}
-                  </div>
-                  <p className={styles.cardMeta}>{getBlockDisplayText(block)}</p>
-                  <p className={styles.cardTags}>
-                    {resolveJobTypeNames(block.jobTypeIds || block.jobTypes).map((name) => (
-                      <span key={name} className={styles.tag}>{name}</span>
-                    ))}
-                  </p>
-                  <div className={styles.cardFooter}>
-                    <button
-                      className={styles.editBtn}
-                      onClick={() => duplicateBlock(block)}
-                      title="Duplicate block"
-                    >
-                      &#10697;
-                    </button>
-                    <button
-                      className={styles.editBtn}
-                      onClick={() => openEditBlockModal(block)}
-                      title="Edit block"
-                    >
-                      ✎
-                    </button>
+                    <div className={styles.cardFooterIcons}>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => duplicateBlock(block)}
+                        title="Duplicate block"
+                      >
+                        &#10697;
+                      </button>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => openEditBlockModal(block)}
+                        title="Edit block"
+                      >
+                        ✎
+                      </button>
+                    </div>
                   </div>
                 </div>
                 );
