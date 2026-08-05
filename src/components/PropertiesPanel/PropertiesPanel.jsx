@@ -4,7 +4,7 @@ import styles from './PropertiesPanel.module.css';
 export default function PropertiesPanel({ resume, personalInfo, onSetTemplate, onUpdatePersonalInfo }) {
   return (
     <aside className={styles.panel} data-print-hide>
-      <div className={styles.panelHeader}>Properties</div>
+      {/* Tab bar above already labels this view — no repeated header */}
       <div className={styles.panelContent}>
         <label>Template</label>
         <div className={styles.templateList}>

@@ -135,7 +135,7 @@ export default function JobDescriptionPanel({
 
   return (
     <div className={styles.container}>
-      <h3 className={styles.title}>Job Description</h3>
+      {/* Tab bar above already labels this view — no repeated title */}
       <p className={styles.description}>
         {autoRun
           ? 'Imported from LinkedIn — extracting keywords and auto-filling…'
