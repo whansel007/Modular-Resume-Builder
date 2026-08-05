@@ -1,7 +1,10 @@
 // Tiny in-memory prefetch cache for builder data.
-// Dashboard warms it on resume-card hover so opening the builder is instant.
+// Dashboard warms it on resume-card hover so opening the builder is instant,
+// and back-navigation to the dashboard reuses the same entries.
+// The TTL is generous because every mutation (save/delete in dashboard or
+// builder) invalidates the affected keys explicitly.
 const cache = new Map(); // key -> { promise, at }
-const TTL_MS = 30000;
+const TTL_MS = 5 * 60 * 1000;
 
 const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth-token')}`,
@@ -30,7 +33,9 @@ export function prefetchBuilderData() {
   getOrFetch('jobtypes', '/api/user/jobtypes');
 }
 
-// Drop cached entries (e.g., after the dashboard refreshes its own data).
-export function invalidatePrefetch() {
-  cache.clear();
+// Drop one cached endpoint (e.g., after mutating that resource) or the
+// whole cache when no key is given.
+export function invalidatePrefetch(key) {
+  if (key) cache.delete(key);
+  else cache.clear();
 }

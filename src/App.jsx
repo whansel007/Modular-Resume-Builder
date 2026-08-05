@@ -12,7 +12,7 @@ import {
   DEFAULT_OWNER,
 } from './utils/constants';
 import { generateId } from './utils/id';
-import { getOrFetch } from './utils/prefetch';
+import { getOrFetch, invalidatePrefetch } from './utils/prefetch';
 import BlockLibrary from './components/BlockLibrary/BlockLibrary';
 import ResumeCanvas from './components/ResumeCanvas/ResumeCanvas';
 import PropertiesPanel from './components/PropertiesPanel/PropertiesPanel';
@@ -69,7 +69,7 @@ export default function App() {
                 ...getAuthHeaders()
               },
               body: JSON.stringify({ email, id, name }),
-            });
+            }).then(() => invalidatePrefetch('jobtypes'));
           });
         } else {
           setJobTypes(data);
@@ -315,6 +315,7 @@ export default function App() {
       } else {
         setBlocks((prev) => [...prev, { ...tempBlock, id: blockId }]);
       }
+      invalidatePrefetch('blocks');
       closeModal();
     } catch (err) {
       console.error('Save block error:', err);
@@ -345,6 +346,7 @@ export default function App() {
         }
         return { ...prev, sections: newSections };
       });
+      invalidatePrefetch('blocks');
     } catch (err) {
       console.error('Delete block error:', err);
       alert('Failed to delete block from server');
@@ -371,7 +373,7 @@ export default function App() {
         ...getAuthHeaders()
       },
       body: JSON.stringify({ email, id, name: trimmed }),
-    });
+    }).then(() => invalidatePrefetch('jobtypes'));
   }, [user?.email]);
 
   // ---------- Resume Operations ----------
@@ -488,6 +490,9 @@ export default function App() {
         setResume((prev) => ({ ...prev, _id: saved._id }));
       }
 
+      // Dashboard list of resumes is now stale
+      invalidatePrefetch('resumes');
+
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus(''), 2000);
     } catch (err) {
@@ -540,7 +545,9 @@ export default function App() {
           ...getAuthHeaders(),
         },
         body: JSON.stringify(newBlocks),
-      }).catch((err) => console.error('Failed to persist auto-filled blocks:', err));
+      })
+        .then(() => invalidatePrefetch('blocks'))
+        .catch((err) => console.error('Failed to persist auto-filled blocks:', err));
     }
 
     const addedSections = Object.keys(result.sections || {}).filter(
