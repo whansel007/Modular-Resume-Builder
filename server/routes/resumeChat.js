@@ -42,11 +42,16 @@ function buildResumeContext(resume, blocks) {
 // POST /api/resume-chat - chat assistant that answers questions about the current resume
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { messages, resume, blocks } = req.body || {};
+    const { messages, resume, blocks, jobDescription } = req.body || {};
 
     if (!Array.isArray(messages) || messages.length === 0) {
       return res.status(400).json({ error: 'Messages are required' });
     }
+
+    // The job description the user pasted in the Job Description panel (if
+    // any). Capped so an unusually long posting can't blow up the prompt.
+    const jd =
+      typeof jobDescription === 'string' ? jobDescription.trim().slice(0, 10000) : '';
 
     const apiKey = process.env.NVIDIA_API_KEY;
     if (!apiKey) {
@@ -57,11 +62,14 @@ router.post('/', requireAuth, async (req, res) => {
 
 Current resume content:
 ${buildResumeContext(resume, blocks)}
-
+${jd ? `
+Job description the user is targeting (pasted in the Job Description panel):
+${jd}
+` : ''}
 RULES:
 - Answer questions and give feedback, tips, and improvement suggestions about this resume.
-- Be concise (a few sentences unless the user asks for detail). Plain text only — no markdown.
-- Base your answers ONLY on the resume content above and general resume best practices.
+${jd ? '- When relevant, compare the resume against the job description: keyword coverage, role fit, and gaps to close.\n' : ''}- Be concise (a few sentences unless the user asks for detail). Plain text only — no markdown.
+- Base your answers ONLY on the resume content above${jd ? ', the job description,' : ''} and general resume best practices.
 - NEVER invent facts about the user or claim their resume contains something it does not. If information is missing, say so and suggest what to add.
 - Frame all suggested wording or content explicitly as a suggestion for the user to verify. You cannot edit the resume yourself.`;
 

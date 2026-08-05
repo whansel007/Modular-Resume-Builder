@@ -7,7 +7,7 @@ const SUGGESTIONS = [
   'Is my summary strong enough?',
 ];
 
-export default function AIChat({ resume, blocks }) {
+export default function AIChat({ resume, blocks, jobDescription }) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -54,6 +54,7 @@ export default function AIChat({ resume, blocks }) {
             sections: resume.sections,
           },
           blocks,
+          jobDescription: (jobDescription || '').trim(),
         }),
       });
 
@@ -89,7 +90,11 @@ export default function AIChat({ resume, blocks }) {
             {messages.length === 0 && (
               <div className={styles.welcome}>
                 <p className={styles.welcomeText}>
-                  Hi! Ask me anything about your resume — I can see what's on the canvas right now.
+                  Hi! Ask me anything about your resume — I can see what's on the canvas right now
+                  {(jobDescription || '').trim()
+                    ? ', plus the job description you pasted'
+                    : ''}
+                  .
                 </p>
                 <div className={styles.suggestions}>
                   {SUGGESTIONS.map((s) => (

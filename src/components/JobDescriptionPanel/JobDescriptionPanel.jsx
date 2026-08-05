@@ -4,6 +4,7 @@ import styles from './JobDescriptionPanel.module.css';
 export default function JobDescriptionPanel({
   onKeywordsExtracted,
   onAutoFill,
+  onJobDescriptionChange,
   initialJobDescription = '',
   autoRun = false,
   autoFillReady = true,
@@ -112,7 +113,19 @@ export default function JobDescriptionPanel({
     if (onKeywordsExtracted) {
       onKeywordsExtracted([]);
     }
+    if (onJobDescriptionChange) {
+      onJobDescriptionChange('');
+    }
   };
+
+  // Report the extension-imported description once it lands, so the AI chat
+  // assistant can see it too (the panel may mount before the import arrives).
+  useEffect(() => {
+    if (initialJobDescription && onJobDescriptionChange) {
+      onJobDescriptionChange(initialJobDescription);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialJobDescription]);
 
   // Deep-link pipeline step 1: extract keywords as soon as the panel mounts
   // with an imported job description.
@@ -146,7 +159,12 @@ export default function JobDescriptionPanel({
         className={styles.textarea}
         placeholder="Paste the job description here..."
         value={jobDescription}
-        onChange={(e) => setJobDescription(e.target.value)}
+        onChange={(e) => {
+          setJobDescription(e.target.value);
+          if (onJobDescriptionChange) {
+            onJobDescriptionChange(e.target.value);
+          }
+        }}
         rows={12}
       />
 

@@ -46,6 +46,9 @@ export default function App() {
   // Right panel tab state
   const [activeRightTab, setActiveRightTab] = useState('properties'); // 'properties' | 'jobDescription'
   const [extractedKeywords, setExtractedKeywords] = useState([]);
+  // Mirror of the text in the Job Description panel — fed to the AI chat so
+  // the assistant can answer against the targeted job description too.
+  const [jobDescription, setJobDescription] = useState('');
 
   // Account-level default personal info (name/email/phone/location). null
   // while the fetch is in flight; {} when the user never saved any. Used to
@@ -1034,6 +1037,7 @@ export default function App() {
               <JobDescriptionPanel
                 onKeywordsExtracted={setExtractedKeywords}
                 onAutoFill={handleAutoFill}
+                onJobDescriptionChange={setJobDescription}
                 initialJobDescription={extImport?.jd || ''}
                 autoRun={!!(extImport && extImport.autofill)}
                 autoFillReady={extBlocksReady}
@@ -1057,7 +1061,7 @@ export default function App() {
         />
       )}
 
-      <AIChat resume={resume} blocks={blocks} />
+      <AIChat resume={resume} blocks={blocks} jobDescription={jobDescription} />
     </div>
   );
 }
