@@ -29,9 +29,17 @@ export default function BlockModal({
   const canSaveAsChildVariant = !!editingBlockId && !!onSaveChildVariant && !isVariant;
 
   const handleTypeChange = (e) => {
-    // Reset content fields when switching type, keep id/type/jobTypeIds
-    const { id, type, jobTypeIds: jtIds } = tempBlock;
-    setTempBlock({ id, type: e.target.value, jobTypeIds: jtIds || [] });
+    const nextType = e.target.value;
+    if (nextType === tempBlock.type) return;
+    // Reset content fields so the old type's fields don't leak into the new
+    // type; identity (id/name), job types and variant markers are kept.
+    const { id, name, jobTypeIds: jtIds, resumeId, variantOf } = tempBlock;
+    const next = { type: nextType, jobTypeIds: jtIds || [] };
+    if (id !== undefined) next.id = id;
+    if (name !== undefined) next.name = name;
+    if (resumeId !== undefined) next.resumeId = resumeId;
+    if (variantOf !== undefined) next.variantOf = variantOf;
+    setTempBlock(next);
   };
 
   const handleFieldChange = (name, value) => {
@@ -103,17 +111,19 @@ export default function BlockModal({
 
           <div className={styles.field}>
             <label>Block Type</label>
-            <select
-              value={tempBlock.type}
-              onChange={handleTypeChange}
-              disabled={!!editingBlockId}
-            >
+            <select value={tempBlock.type} onChange={handleTypeChange}>
               {Object.entries(BLOCK_SCHEMA).map(([key, val]) => (
                 <option key={key} value={key}>
                   {val.label}
                 </option>
               ))}
             </select>
+            {!!editingBlockId && (
+              <span className={styles.nameHint}>
+                Changing the type clears this block's fields and moves it to the matching section
+                on the canvas.
+              </span>
+            )}
           </div>
 
           {schema.fields.map((field) => (

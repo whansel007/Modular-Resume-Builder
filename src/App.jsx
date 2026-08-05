@@ -10,6 +10,7 @@ import {
   DEFAULT_JOB_TYPES_MAP,
   SECTION_NAME_SUGGESTIONS,
   DEFAULT_OWNER,
+  BLOCK_SCHEMA,
 } from './utils/constants';
 import { generateId } from './utils/id';
 import { getOrFetch, invalidatePrefetch } from './utils/prefetch';
@@ -399,6 +400,29 @@ export default function App() {
 
       if (!res.ok) throw new Error('Failed to save block');
 
+      // Changing an existing block's type moves it to the matching section on
+      // the current resume so it never renders under the wrong heading.
+      if (editingBlockId && tempBlock.type) {
+        const prevBlock = blocks.find((b) => b.id === editingBlockId);
+        const targetTitle = BLOCK_SCHEMA[tempBlock.type]?.label;
+        if (prevBlock && prevBlock.type !== tempBlock.type && targetTitle) {
+          setResume((prev) => {
+            const sections = {};
+            for (const [title, ids] of Object.entries(prev.sections || {})) {
+              sections[title] = ids.filter((id) => id !== editingBlockId);
+            }
+            const alreadyInTarget = (prev.sections?.[targetTitle] || []).includes(editingBlockId);
+            if (!alreadyInTarget) {
+              sections[targetTitle] = [...(sections[targetTitle] || []), editingBlockId];
+            }
+            const sectionOrder = (prev.sectionOrder || []).includes(targetTitle)
+              ? prev.sectionOrder
+              : [...(prev.sectionOrder || []), targetTitle];
+            return { ...prev, sections, sectionOrder };
+          });
+        }
+      }
+
       // Update local state
       if (editingBlockId) {
         setBlocks((prev) =>
@@ -413,7 +437,7 @@ export default function App() {
       console.error('Save block error:', err);
       alert('Failed to save block to server');
     }
-  }, [editingBlockId, tempBlock, setBlocks, closeModal, user?.email]);
+  }, [editingBlockId, tempBlock, blocks, setBlocks, setResume, closeModal, user?.email]);
 
   // Save the block being edited as a resume-scoped VARIANT: a copy with a
   // new id, marked with this resume's id, swapped in for the original in
