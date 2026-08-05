@@ -294,6 +294,36 @@
   background: var(--yellow) !important;
 }
 
+/* Variant row: pick button + inline delete icon */
+.variantMenuRow {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px dashed var(--ink);
+}
+
+.variantMenuRow:last-child {
+  border-bottom: none;
+}
+
+/* The row owns the divider — inner buttons drop their own */
+.variantMenuRow button {
+  border-bottom: none;
+}
+
+.variantMenuRow button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.variantMenuDelete {
+  flex-shrink: 0;
+  border-left: 1px dashed var(--ink);
+}
+
+.variantMenu .variantMenuDelete:hover {
+  background: var(--danger-light, #fbe9e7);
+}
+
 .variantPicked {
   font-family: var(--font-mono);
   font-size: 10px;

@@ -612,21 +612,24 @@ export default function App() {
   }, [blocks, setBlocks, setResume, user?.email]);
 
   const deleteBlock = useCallback(async (blockId) => {
-    if (!confirm('Delete this block from the library? It will also be removed from any resume using it.')) return;
-    
-    try {
-      // Delete from MongoDB
-      const res = await fetch(`/api/blocks/${blockId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
-        }
-      });
+    // Deleting a parent takes its library child variants with it so none are
+    // left orphaned in the database.
+    const children = blocks.filter((b) => b.variantOf === blockId && !b.resumeId);
+    const message = children.length
+      ? `Delete this block and its ${children.length} child variant${children.length === 1 ? '' : 's'}? It will also be removed from any resume using it.`
+      : 'Delete this block from the library? It will also be removed from any resume using it.';
+    if (!confirm(message)) return;
 
+    try {
+      const headers = {
+        'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
+      };
+      // Delete from MongoDB — the server cascade-deletes library child
+      // variants of a deleted parent, so one request is enough.
+      const res = await fetch(`/api/blocks/${blockId}`, { method: 'DELETE', headers });
       if (!res.ok) throw new Error('Failed to delete block');
 
-      // Update local state (child variants of the deleted block go with it;
-      // resume-scoped variants stay on their resume).
+      // Update local state (resume-scoped variants stay on their resume).
       setBlocks((prev) => prev.filter((b) => b.id !== blockId && !(b.variantOf === blockId && !b.resumeId)));
       setResume((prev) => {
         const newSections = { ...prev.sections };
@@ -640,7 +643,7 @@ export default function App() {
       console.error('Delete block error:', err);
       alert('Failed to delete block from server');
     }
-  }, [setBlocks, setResume]);
+  }, [blocks, setBlocks, setResume]);
 
   // ---------- Job Types ----------
 

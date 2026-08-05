@@ -236,13 +236,22 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
                       {block.name || `${schema.label} block`} (original)
                     </button>
                     {childVariants.map((v) => (
-                      <button
-                        key={v.id}
-                        className={pickedId === v.id ? styles.variantMenuActive : ''}
-                        onClick={() => pickVariant(block.id, v.id)}
-                      >
-                        {v.name || `${BLOCK_SCHEMA[v.type]?.label || v.type} variant`}
-                      </button>
+                      <div key={v.id} className={styles.variantMenuRow}>
+                        <button
+                          className={pickedId === v.id ? styles.variantMenuActive : ''}
+                          onClick={() => pickVariant(block.id, v.id)}
+                        >
+                          {v.name || `${BLOCK_SCHEMA[v.type]?.label || v.type} variant`}
+                        </button>
+                        <button
+                          className={styles.variantMenuDelete}
+                          onClick={() => onDeleteBlock(v.id)}
+                          title="Delete this variant"
+                          aria-label="Delete this variant"
+                        >
+                          &#128465;
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}

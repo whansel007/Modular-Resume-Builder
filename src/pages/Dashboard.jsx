@@ -9,7 +9,7 @@ import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/pr
 import styles from './Dashboard.module.css';
 
 // Popup listing all child variants saved under a library block.
-function VariantsModal({ parent, variants, getDisplayText, onClose, onEdit, onDuplicate }) {
+function VariantsModal({ parent, variants, getDisplayText, onClose, onEdit, onDuplicate, onDelete }) {
   const parentName = parent.name || `${BLOCK_SCHEMA[parent.type]?.label || ''} block`;
   return (
     <div className={styles.variantsOverlay} onClick={onClose}>
@@ -44,6 +44,13 @@ function VariantsModal({ parent, variants, getDisplayText, onClose, onEdit, onDu
                     title="Edit variant"
                   >
                     ✎
+                  </button>
+                  <button
+                    className={styles.editBtn}
+                    onClick={() => onDelete(v)}
+                    title="Delete variant"
+                  >
+                    &#128465;
                   </button>
                 </div>
               </li>
@@ -240,6 +247,37 @@ export default function Dashboard() {
     } catch (err) {
       console.error('Duplicate block error:', err);
       setError('Failed to duplicate block');
+    }
+  };
+
+  // Delete a library block or a child variant. Deleting a parent takes its
+  // child variants with it so none are left orphaned in the database.
+  const deleteBlock = async (block) => {
+    const blockId = block._id || block.id;
+    const children = childrenOf(block);
+    const message = children.length
+      ? `Delete this block and its ${children.length} child variant${children.length === 1 ? '' : 's'}? Resumes using it will lose the block.`
+      : 'Delete this block? Resumes using it will lose the block.';
+    if (!confirm(message)) return;
+
+    try {
+      // One request is enough — the server cascade-deletes library child
+      // variants of a deleted parent.
+      const res = await fetch(`/api/blocks/${blockId}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+      });
+      if (!res.ok) throw new Error('Failed to delete block');
+      const childIds = children.map((c) => c._id || c.id);
+      setBlocks((prev) => prev.filter((b) => (b._id || b.id) !== blockId && !childIds.includes(b._id || b.id)));
+      invalidatePrefetch('blocks');
+      // If the popup is open on the deleted parent, close it.
+      if (variantsModalBlock && (variantsModalBlock._id || variantsModalBlock.id) === blockId) {
+        setVariantsModalBlock(null);
+      }
+    } catch (err) {
+      console.error('Delete block error:', err);
+      setError('Failed to delete block');
     }
   };
 
@@ -695,6 +733,13 @@ export default function Dashboard() {
                       >
                         ✎
                       </button>
+                      <button
+                        className={styles.editBtn}
+                        onClick={() => deleteBlock(block)}
+                        title="Delete block"
+                      >
+                        &#128465;
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -776,6 +821,7 @@ export default function Dashboard() {
             openEditBlockModal(variant);
           }}
           onDuplicate={(variant) => duplicateBlock(variant)}
+          onDelete={(variant) => deleteBlock(variant)}
         />
       )}
 
