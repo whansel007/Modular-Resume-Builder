@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Copy JD</title>
+  <style>
+    /* Popup panel, matched to the Modular Resume Builder "Pressroom" theme. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      background: #f1efe7;
+      color: #1d2733;
+      font-family: 'Karla', 'Segoe UI', system-ui, sans-serif;
+      padding: 20px;
+    }
+
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .title img {
+      width: 32px;
+      height: 32px;
+      border: 2px solid #1d2733;
+      border-radius: 3px;
+      box-shadow: 2px 2px 0 #1d2733;
+    }
+
+    h1 {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+
+    .tagline {
+      font-size: 12px;
+      color: #5b6470;
+      margin-bottom: 14px;
+    }
+
+    ol {
+      list-style: none;
+      counter-reset: steps;
+      display: grid;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    ol li {
+      counter-increment: steps;
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    ol li::before {
+      content: counter(steps);
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #1d2733;
+      border-radius: 3px;
+      background: #ffd23f;
+      font-weight: 800;
+      font-size: 12px;
+      box-shadow: 2px 2px 0 #1d2733;
+    }
+
+    ol strong { color: #274bff; }
+
+    .note {
+      font-size: 12px;
+      line-height: 1.45;
+      border: 2px solid #1d2733;
+      border-radius: 3px;
+      background: #fff;
+      padding: 10px 12px;
+      margin-bottom: 16px;
+      box-shadow: 3px 3px 0 #1d2733;
+    }
+
+    .note b { color: #274bff; }
+
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 9px 14px;
+      border: 2px solid #1d2733;
+      border-radius: 3px;
+      background: #274bff;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      box-shadow: 3px 3px 0 #1d2733;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 4px 4px 0 #1d2733;
+    }
+
+    .btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 1px 1px 0 #1d2733;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: wait;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: #f1efe7;
+      color: #1d2733;
+    }
+
+    .status {
+      margin: 12px 0 0;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.45;
+      padding: 8px 10px;
+      border: 2px solid #1d2733;
+      border-radius: 3px;
+      background: #fff;
+    }
+
+    .status.ok { background: #d9f2e3; }
+    .status.error { background: #ffdbe7; }
+    .status.busy { background: #fff3c4; }
+
+    #preview {
+      margin-top: 10px;
+      width: 100%;
+      height: 120px;
+      resize: none;
+      border: 2px solid #1d2733;
+      border-radius: 3px;
+      background: #fff;
+      padding: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #1d2733;
+    }
+  </style>
+</head>
+<body>
+  <div class="title">
+    <img src="icons/icon48.png" alt="" />
+    <h1>Copy Job<br>Description</h1>
+  </div>
+  <p class="tagline">Companion for Modular Resume Builder</p>
+
+  <ol>
+    <li>Open any <strong>LinkedIn job posting</strong> in this tab.</li>
+    <li>Click <strong>Autofill in Resume Builder</strong> below.</li>
+    <li>A fresh resume opens with the JD already extracted &amp; auto-filled.</li>
+  </ol>
+
+  <button id="open-builder" class="btn">⚡ Autofill in Resume Builder</button>
+  <button id="grab" class="btn btn-secondary" style="margin-top: 8px;">Copy JD to clipboard</button>
+  <div id="status" class="status" hidden></div>
+  <textarea id="preview" readonly hidden></textarea>
+
+  <div class="note" style="margin-top: 14px;">
+    <b>Tip:</b> open a job from the search results so the description panel is
+    visible before grabbing. You'll need to be signed in to the Resume
+    Builder — if not, it picks up right after you log in.
+  </div>
+
+  <button id="open-jobs" class="btn btn-secondary">Open LinkedIn Jobs</button>
+  <script src="popup.js"></script>
+</body>
+</html>

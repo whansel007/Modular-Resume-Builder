@@ -46,6 +46,25 @@ export default function App() {
   const [activeRightTab, setActiveRightTab] = useState('properties'); // 'properties' | 'jobDescription'
   const [extractedKeywords, setExtractedKeywords] = useState([]);
 
+  // Deep-link import from the "Copy JD" browser extension. main.jsx stashes
+  // the payload in sessionStorage (so it survives the login redirect); read
+  // it here, consume it in the fresh-resume effect below.
+  const [extImport] = useState(() => {
+    try {
+      const jd = sessionStorage.getItem('mrb-ext-jd');
+      if (!jd) return null;
+      return {
+        jd,
+        autofill: sessionStorage.getItem('mrb-ext-autofill') === '1',
+        title: sessionStorage.getItem('mrb-ext-title') || '',
+      };
+    } catch {
+      return null;
+    }
+  });
+  // Auto-fill needs the block library loaded before it can place blocks.
+  const [extBlocksReady, setExtBlocksReady] = useState(false);
+
   // personalInfo now lives inside the resume object
   const personalInfo = resume.personalInfo || {};
 
@@ -84,27 +103,41 @@ export default function App() {
       });
   }, [user?.email, navigate]);
 
-  // ---------- Reset resume if ?new=true ----------
+  // ---------- Reset resume if ?new=true (or an extension deep link arrived) ----------
   useEffect(() => {
-    if (searchParams.get('new') === 'true') {
-      setResume(BLANK_RESUME);
-      
-      // Fetch blocks from MongoDB for the authenticated user
-      const email = user?.email || DEFAULT_OWNER;
-      getOrFetch('blocks', '/api/blocks')
-        .then((blocks) => {
-          // Flatten content fields for each block
-          const flattened = blocks.map((b) => {
-            const { content, ...rest } = b;
-            return { ...rest, ...(content || {}), id: b._id };
-          });
-          setBlocks(flattened);
-        })
-        .catch((err) => console.error('Failed to fetch blocks:', err));
-      
-      setSearchParams({});
+    if (searchParams.get('new') !== 'true' && !extImport) return;
+
+    setResume(
+      extImport?.title ? { ...BLANK_RESUME, title: extImport.title } : BLANK_RESUME,
+    );
+
+    // Fetch blocks from MongoDB for the authenticated user
+    getOrFetch('blocks', '/api/blocks')
+      .then((blocks) => {
+        // Flatten content fields for each block
+        const flattened = blocks.map((b) => {
+          const { content, ...rest } = b;
+          return { ...rest, ...(content || {}), id: b._id };
+        });
+        setBlocks(flattened);
+      })
+      .catch((err) => console.error('Failed to fetch blocks:', err))
+      .finally(() => {
+        // Unblock the pending auto-fill even if the fetch failed.
+        if (extImport) setExtBlocksReady(true);
+      });
+
+    if (extImport) {
+      // Deep link consumed: drop the payload and switch to the JD tab so the
+      // user can watch the automatic extract + auto-fill run.
+      sessionStorage.removeItem('mrb-ext-jd');
+      sessionStorage.removeItem('mrb-ext-autofill');
+      sessionStorage.removeItem('mrb-ext-title');
+      setActiveRightTab('jobDescription');
     }
-  }, [searchParams, setSearchParams, setResume, setBlocks, user?.email]);
+
+    setSearchParams({});
+  }, [searchParams, setSearchParams, setResume, setBlocks, extImport]);
 
   // ---------- Fetch resume and blocks from MongoDB if ?resume=<id> ----------
   useEffect(() => {
@@ -731,7 +764,13 @@ export default function App() {
                 onUpdatePersonalInfo={updatePersonalInfoField}
               />
             ) : (
-              <JobDescriptionPanel onKeywordsExtracted={setExtractedKeywords} onAutoFill={handleAutoFill} />
+              <JobDescriptionPanel
+                onKeywordsExtracted={setExtractedKeywords}
+                onAutoFill={handleAutoFill}
+                initialJobDescription={extImport?.jd || ''}
+                autoRun={!!(extImport && extImport.autofill)}
+                autoFillReady={extBlocksReady}
+              />
             )}
           </div>
         </div>

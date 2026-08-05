@@ -1,14 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './JobDescriptionPanel.module.css';
 
-export default function JobDescriptionPanel({ onKeywordsExtracted, onAutoFill }) {
-  const [jobDescription, setJobDescription] = useState('');
+export default function JobDescriptionPanel({
+  onKeywordsExtracted,
+  onAutoFill,
+  initialJobDescription = '',
+  autoRun = false,
+  autoFillReady = true,
+}) {
+  const [jobDescription, setJobDescription] = useState(initialJobDescription);
   const [keywords, setKeywords] = useState([]);
   const [selected, setSelected] = useState({}); // { keyword: boolean }
   const [loading, setLoading] = useState(false);
   const [autofilling, setAutofilling] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+
+  // One-shot guards for the extension deep-link pipeline (autoRun):
+  // extract once on arrival, then auto-fill once keywords exist and the
+  // block library has finished loading (autoFillReady).
+  const autoExtractedRef = useRef(false);
+  const autoFilledRef = useRef(false);
 
   const selectedKeywords = keywords.filter((k) => selected[k]);
 
@@ -102,11 +114,32 @@ export default function JobDescriptionPanel({ onKeywordsExtracted, onAutoFill })
     }
   };
 
+  // Deep-link pipeline step 1: extract keywords as soon as the panel mounts
+  // with an imported job description.
+  useEffect(() => {
+    if (!autoRun || !initialJobDescription || autoExtractedRef.current) return;
+    autoExtractedRef.current = true;
+    handleExtract();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Deep-link pipeline step 2: once extraction produced keywords (all
+  // selected by default) and the block library is ready, auto-fill.
+  useEffect(() => {
+    if (!autoRun || autoFilledRef.current || !autoFillReady) return;
+    if (loading || keywords.length === 0) return;
+    autoFilledRef.current = true;
+    handleAutoFill();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [keywords, autoFillReady, loading]);
+
   return (
     <div className={styles.container}>
       <h3 className={styles.title}>Job Description</h3>
       <p className={styles.description}>
-        Paste a job description to extract relevant keywords for your resume.
+        {autoRun
+          ? 'Imported from LinkedIn — extracting keywords and auto-filling…'
+          : 'Paste a job description to extract relevant keywords for your resume.'}
       </p>
 
       <textarea

@@ -1,0 +1,75 @@
+/* Copy JD button + toast, styled to match the Modular Resume Builder
+   "Pressroom" theme (ultramarine ink, hard offset shadow). All classes are
+   namespaced with `mrb-` to avoid colliding with LinkedIn's styles. */
+
+.mrb-copy-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 999;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 2px solid #1d2733;
+  border-radius: 3px;
+  background: #274bff;
+  color: #fff;
+  font-family: 'Karla', 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 #1d2733;
+  transition: transform 0.08s ease, box-shadow 0.08s ease, background 0.12s ease;
+}
+
+.mrb-copy-btn:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 #1d2733;
+}
+
+.mrb-copy-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 #1d2733;
+}
+
+.mrb-copy-btn-done {
+  background: #1e9e55;
+}
+
+.mrb-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  max-width: 420px;
+  padding: 10px 18px;
+  border: 2px solid #1d2733;
+  border-radius: 3px;
+  background: #ffd23f;
+  color: #1d2733;
+  font-family: 'Karla', 'Segoe UI', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 4px 4px 0 #1d2733;
+  animation: mrb-toast-in 0.18s ease-out;
+}
+
+.mrb-toast-error {
+  background: #ff4d8d;
+  color: #fff;
+}
+
+@keyframes mrb-toast-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}

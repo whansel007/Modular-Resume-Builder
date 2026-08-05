@@ -23,6 +23,21 @@ export default function Dashboard() {
     }
   }, [user, navigate]);
 
+  // Resume a pending extension deep link ("Copy JD" → Open in Resume
+  // Builder) once the user is authenticated. The payload sits in
+  // sessionStorage while they log in; continue the flow straight into a
+  // fresh builder instead of making them click through again.
+  useEffect(() => {
+    if (!user?.email) return;
+    try {
+      if (sessionStorage.getItem('mrb-ext-jd')) {
+        navigate('/builder?new=true', { replace: true });
+      }
+    } catch {
+      /* sessionStorage unavailable */
+    }
+  }, [user?.email, navigate]);
+
   // Block modal state
   const [blockModalOpen, setBlockModalOpen] = useState(false);
   const [editingBlockId, setEditingBlockId] = useState(null);

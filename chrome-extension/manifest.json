@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "Copy Job Description — Modular Resume Builder",
+  "version": "1.0.0",
+  "description": "Copies a LinkedIn job description to your clipboard in one click, ready to paste into the Modular Resume Builder job description panel.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Copy Job Description — Modular Resume Builder",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "permissions": ["scripting", "activeTab"],
+  "host_permissions": ["https://www.linkedin.com/*"]
+}
