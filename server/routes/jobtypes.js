@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import User from '../models/User.js';
+import User, { DEFAULT_JOB_TYPES } from '../models/User.js';
 import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
@@ -10,6 +10,16 @@ router.get('/', requireAuth, async (req, res) => {
     const user = await User.findOne({ email: req.user.email });
     if (!user) return res.status(404).json({ error: 'User not found' });
 
+    // One-time backfill: accounts created before the schema-default change
+    // have jobTypes stored as {} and would otherwise stay empty forever.
+    if (!user.jobTypesInitialized) {
+      if (!user.jobTypes || user.jobTypes.size === 0) {
+        user.jobTypes = new Map(Object.entries(DEFAULT_JOB_TYPES));
+      }
+      user.jobTypesInitialized = true;
+      await user.save();
+    }
+
     // Convert Map to plain object
     const jobTypes = {};
     if (user.jobTypes) {
@@ -19,7 +29,8 @@ router.get('/', requireAuth, async (req, res) => {
     }
     res.json(jobTypes);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to list job types:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -39,7 +50,8 @@ router.post('/', requireAuth, async (req, res) => {
 
     res.status(201).json({ id, name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to add job type:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -61,7 +73,8 @@ router.put('/', requireAuth, async (req, res) => {
 
     res.json({ id, name });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to update job type:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -81,7 +94,8 @@ router.delete('/', requireAuth, async (req, res) => {
 
     res.json({ success: true, id });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to delete job type:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

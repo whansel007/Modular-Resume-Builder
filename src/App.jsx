@@ -53,28 +53,12 @@ export default function App() {
 
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
-    const email = user?.email || DEFAULT_OWNER;
     fetch('/api/user/jobtypes', { headers: getAuthHeaders() })
-      .then((res) => res.json())
-      .then((data) => {
-        if (Object.keys(data).length === 0) {
-          // Seed defaults if user has no job types
-          setJobTypes(DEFAULT_JOB_TYPES_MAP);
-          // Also persist defaults to API
-          Object.entries(DEFAULT_JOB_TYPES_MAP).forEach(([id, name]) => {
-            fetch('/api/user/jobtypes', {
-              method: 'POST',
-              headers: { 
-                'Content-Type': 'application/json',
-                ...getAuthHeaders()
-              },
-              body: JSON.stringify({ email, id, name }),
-            });
-          });
-        } else {
-          setJobTypes(data);
-        }
+      .then((res) => {
+        if (!res.ok) throw new Error(`Job types request failed (${res.status})`);
+        return res.json();
       })
+      .then(setJobTypes)
       .catch((err) => {
         console.error('Failed to fetch job types:', err);
         setJobTypes(DEFAULT_JOB_TYPES_MAP);
@@ -351,7 +335,7 @@ export default function App() {
       setResume((prev) => {
         const newSections = { ...prev.sections };
         for (const key of Object.keys(newSections)) {
-          newSections[key] = newSections[key].filter((id) => id !== blockId);
+          newSections[key] = (newSections[key] || []).filter((id) => id !== blockId);
         }
         return { ...prev, sections: newSections };
       });

@@ -15,6 +15,11 @@ import resumeChatRouter from './routes/resumeChat.js';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: join(__dirname, '.env') });
 
+if (!process.env.JWT_SECRET) {
+  console.error('Missing required environment variable: JWT_SECRET');
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3001;
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/resume-builder';

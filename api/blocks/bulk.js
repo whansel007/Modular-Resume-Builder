@@ -30,6 +30,7 @@ export default async function handler(req, res) {
       res.status(405).json({ error: 'Method not allowed' });
     }
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Blocks bulk handler error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

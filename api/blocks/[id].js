@@ -13,7 +13,7 @@ export default async function handler(req, res) {
 
     await connectToDatabase();
 
-    const blockId = req.url.split('/').pop();
+    const blockId = req.query.id;
     const block = await Block.findById(blockId);
     
     if (!block) {
@@ -27,6 +27,7 @@ export default async function handler(req, res) {
     await Block.findByIdAndDelete(blockId);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Block delete handler error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 }

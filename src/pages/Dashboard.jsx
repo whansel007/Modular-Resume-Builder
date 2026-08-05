@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import BlockModal from '../components/BlockModal/BlockModal';
-import { BLOCK_SCHEMA, DEFAULT_JOB_TYPES_MAP, DEFAULT_OWNER } from '../utils/constants';
+import { BLOCK_SCHEMA, DEFAULT_OWNER } from '../utils/constants';
 import { generateId } from '../utils/id';
 import styles from './Dashboard.module.css';
 
@@ -58,11 +58,6 @@ export default function Dashboard() {
       setResumes(resumesData);
       setBlocks(blocksData);
       setJobTypes(jobTypesData);
-
-      // If user has no job types, seed defaults
-      if (Object.keys(jobTypesData).length === 0) {
-        await seedDefaultJobTypes();
-      }
     } catch (err) {
       setError(err.message || 'Failed to load data');
     } finally {
@@ -73,25 +68,6 @@ export default function Dashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
-
-  const seedDefaultJobTypes = async () => {
-    try {
-      const promises = Object.entries(DEFAULT_JOB_TYPES_MAP).map(([id, name]) =>
-        fetch('/api/user/jobtypes', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            ...getAuthHeaders()
-          },
-          body: JSON.stringify({ id, name }),
-        }),
-      );
-      await Promise.all(promises);
-      setJobTypes(DEFAULT_JOB_TYPES_MAP);
-    } catch (err) {
-      console.error('Failed to seed job types:', err);
-    }
-  };
 
   const handleLogout = () => {
     localStorage.removeItem('auth-token');

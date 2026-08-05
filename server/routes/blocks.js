@@ -10,7 +10,8 @@ router.get('/', requireAuth, async (req, res) => {
     const blocks = await Block.find({ owner: req.user.email }).sort({ updatedAt: -1 });
     res.json(blocks);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to list blocks:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -32,7 +33,8 @@ router.post('/', requireAuth, async (req, res) => {
     );
     res.status(201).json(block);
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Failed to upsert block:', err);
+    res.status(400).json({ error: 'Invalid block data' });
   }
 });
 
@@ -56,7 +58,8 @@ router.post('/bulk', requireAuth, async (req, res) => {
     const result = await Block.bulkWrite(ops);
     res.json({ success: true, matched: result.matchedCount, upserted: result.upsertedCount });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    console.error('Failed to bulk write blocks:', err);
+    res.status(400).json({ error: 'Invalid block data' });
   }
 });
 
@@ -73,7 +76,8 @@ router.delete('/:id', requireAuth, async (req, res) => {
     await Block.findByIdAndDelete(req.params.id);
     res.json({ success: true });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('Failed to delete block:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

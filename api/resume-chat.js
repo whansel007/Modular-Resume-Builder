@@ -99,6 +99,6 @@ RULES:
     res.json({ reply });
   } catch (err) {
     console.error('Resume chat error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to reach the AI assistant' });
   }
 }

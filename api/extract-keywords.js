@@ -78,6 +78,6 @@ Return ONLY a JSON array of keywords, no other text:`;
     res.json({ keywords: keywords.filter(k => typeof k === 'string' && k.trim().length > 0) });
   } catch (err) {
     console.error('Extract keywords error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to extract keywords' });
   }
 }

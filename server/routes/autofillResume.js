@@ -155,7 +155,7 @@ Return ONLY JSON, no other text, in this exact shape:
     });
   } catch (err) {
     console.error('Autofill resume error:', err);
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ error: 'Failed to auto-fill resume' });
   }
 });
 
