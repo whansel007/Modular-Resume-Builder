@@ -1,18 +1,51 @@
+/* ── Block Library · Pressroom ──────────────────────────────── */
+
 .panel {
   width: 320px;
   flex-shrink: 0;
   background: var(--panel);
-  border-right: 1px solid var(--border);
+  border-right: var(--border-w) solid var(--ink);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
+@media (max-width: 1100px) {
+  .panel {
+    width: 264px;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel {
+    width: 220px;
+  }
+}
+
+/* Spec-sheet style header: mono label with riso ink dot */
 .panelHeader {
-  padding: 16px;
-  border-bottom: 1px solid var(--border);
+  padding: 14px 16px;
+  border-bottom: var(--border-w) solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
-  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  background: var(--panel-2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.panelHeader::before {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--primary);
+  border: 1.5px solid var(--ink);
+  flex-shrink: 0;
 }
 
 .dropZone {
@@ -43,12 +76,13 @@
 }
 
 .field label {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
   color: var(--muted);
-  margin-bottom: 4px;
+  margin: 0 0 4px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.1em;
 }
 
 .field select {
@@ -61,56 +95,98 @@
   flex-wrap: wrap;
 }
 
+/* Job-type pills: flat chips with ink keyline */
 .tag {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 999px;
-  font-size: 11px;
+  border: 1.5px solid var(--ink);
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
-  background: #e5e7eb;
-  color: var(--text);
+  letter-spacing: 0.03em;
+  background: var(--panel);
+  color: var(--ink);
   cursor: pointer;
   user-select: none;
+  transition: background 0.12s, color 0.12s;
+}
+
+.tag:hover {
+  background: var(--panel-2);
 }
 
 .active {
   background: var(--primary);
+  border-color: var(--ink);
   color: #fff;
 }
 
 .required {
-  background: var(--success);
-  color: #fff;
+  background: var(--yellow);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .filterHint {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   color: var(--muted);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
 }
 
 .blockList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
+/* Block card: paper sheet, hard shadow, type-colored stripe */
 .blockCard {
+  position: relative;
   background: #fff;
-  border: 1px solid var(--border);
+  border: var(--border-w) solid var(--ink);
   border-radius: var(--radius);
-  padding: 12px;
+  padding: 12px 12px 12px 18px;
   cursor: grab;
-  box-shadow: var(--shadow);
-  transition: transform 0.1s, box-shadow 0.1s;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.blockCard::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 8px;
+  bottom: 8px;
+  width: 5px;
+  border-radius: 2px;
+  background: var(--muted);
+}
+
+.blockCard[data-block-type='summary']::before {
+  background: var(--primary);
+}
+
+.blockCard[data-block-type='experience']::before {
+  background: var(--pink);
+}
+
+.blockCard[data-block-type='education']::before {
+  background: var(--yellow);
+}
+
+.blockCard[data-block-type='skills']::before {
+  background: var(--green);
 }
 
 .blockCard:hover {
-  border-color: var(--primary);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
 }
 
 .dragging {
@@ -120,20 +196,25 @@
 
 .blockCard h4 {
   margin: 0 0 4px 0;
-  font-size: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink);
 }
 
 .meta {
   font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 8px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
 }
 
 .preview {
   font-size: 12px;
-  color: var(--text);
-  line-height: 1.4;
+  color: var(--muted);
+  line-height: 1.45;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -147,6 +228,17 @@
   gap: 5px;
 }
 
+.tags .tag {
+  cursor: default;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-width: 1px;
+}
+
+.tags .tag:hover {
+  background: var(--panel);
+}
+
 .actions {
   margin-top: 10px;
   display: flex;
@@ -155,38 +247,54 @@
 }
 
 .small {
-  padding: 5px 8px;
-  font-size: 12px;
+  padding: 5px 9px;
+  font-size: 10px;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.small:hover {
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+.small:active {
+  box-shadow: 0 0 0 var(--ink);
 }
 
 .danger {
   color: var(--danger);
-  border-color: #fecaca;
-  background: #fef2f2;
+  border-color: var(--danger);
+  background: var(--danger-light);
+  box-shadow: 2px 2px 0 var(--danger);
 }
 
 .danger:hover {
-  background: #fee2e2;
+  background: var(--danger-light);
+  box-shadow: 3px 3px 0 var(--danger);
 }
 
+/* Drop zone active: fluoro pink "pull from press" state */
 .dropActive {
-  background: rgba(59, 130, 246, 0.04);
+  background: var(--pink-light);
 }
 
 .dropActive::after {
   content: '';
   position: absolute;
   inset: 8px;
-  border: 2px dashed #f9a8b8;
-  border-radius: 12px;
+  border: var(--border-w) dashed var(--pink);
+  border-radius: var(--radius);
   pointer-events: none;
   z-index: 11;
   animation: dropBorderFadeIn 0.12s ease forwards;
 }
 
 @keyframes dropBorderFadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .dropHint {
@@ -195,11 +303,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(254, 242, 242, 0.85);
+  background: rgba(255, 227, 238, 0.88);
   backdrop-filter: blur(1px);
-  font-size: 14px;
+  font-family: var(--font-mono);
+  font-size: 12px;
   font-weight: 600;
-  color: #e05575;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--pink);
   z-index: 10;
   pointer-events: none;
   opacity: 0;
@@ -215,4 +326,6 @@
   color: var(--muted);
   padding: 30px 10px;
   font-size: 13px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
 }

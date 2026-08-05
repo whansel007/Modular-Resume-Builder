@@ -12,6 +12,7 @@ import {
   DEFAULT_OWNER,
 } from './utils/constants';
 import { generateId } from './utils/id';
+import { getOrFetch, invalidatePrefetch } from './utils/prefetch';
 import BlockLibrary from './components/BlockLibrary/BlockLibrary';
 import ResumeCanvas from './components/ResumeCanvas/ResumeCanvas';
 import PropertiesPanel from './components/PropertiesPanel/PropertiesPanel';
@@ -64,33 +65,23 @@ export default function App() {
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
     if (!user?.email) return;
-    const controller = new AbortController();
-    fetch('/api/user/jobtypes', {
-      headers: getAuthHeaders(),
-      signal: controller.signal,
-    })
-      .then((res) => {
+    getOrFetch('jobtypes', '/api/user/jobtypes')
+      .then((data) => {
+        setJobTypes(data);
+      })
+      .catch((err) => {
         // A 401 here means the stored token has expired or been revoked while
         // auth-user is still present. Clear the session and send the user to
         // login so they aren't stuck behind the redirect gate with a dead token.
-        if (res.status === 401) {
+        if (err.status === 401) {
           localStorage.removeItem('auth-token');
           localStorage.removeItem('auth-user');
           navigate('/login');
-          return null;
+          return;
         }
-        if (!res.ok) throw new Error(`Job types request failed (${res.status})`);
-        return res.json();
-      })
-      .then((data) => {
-        if (data) setJobTypes(data);
-      })
-      .catch((err) => {
-        if (err.name === 'AbortError') return;
         console.error('Failed to fetch job types:', err);
         setJobTypes(DEFAULT_JOB_TYPES_MAP);
       });
-    return () => controller.abort();
   }, [user?.email, navigate]);
 
   // ---------- Reset resume if ?new=true ----------
@@ -100,12 +91,7 @@ export default function App() {
       
       // Fetch blocks from MongoDB for the authenticated user
       const email = user?.email || DEFAULT_OWNER;
-      fetch('/api/blocks', {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`
-        }
-      })
-        .then((res) => res.json())
+      getOrFetch('blocks', '/api/blocks')
         .then((blocks) => {
           // Flatten content fields for each block
           const flattened = blocks.map((b) => {
@@ -125,12 +111,9 @@ export default function App() {
     const resumeId = searchParams.get('resume');
     if (!resumeId) return;
 
-    const authToken = localStorage.getItem('auth-token');
-    const headers = { 'Authorization': `Bearer ${authToken}` };
-
-    // Fetch the specific resume
-    fetch('/api/resumes', { headers })
-      .then((res) => res.json())
+    // Uses the prefetch cache — if the card was hovered on the dashboard,
+    // these resolve instantly; otherwise they fetch as normal.
+    getOrFetch('resumes', '/api/resumes')
       .then((resumes) => {
         const found = resumes.find((r) => r._id === resumeId);
         if (found) {
@@ -140,9 +123,7 @@ export default function App() {
       })
       .catch((err) => console.error('Failed to fetch resume:', err));
 
-    // Fetch blocks for this user
-    fetch('/api/blocks', { headers })
-      .then((res) => res.json())
+    getOrFetch('blocks', '/api/blocks')
       .then((blocks) => {
         // Flatten content fields for each block
         const flattened = blocks.map((b) => {
@@ -337,6 +318,7 @@ export default function App() {
       } else {
         setBlocks((prev) => [...prev, { ...tempBlock, id: blockId }]);
       }
+      invalidatePrefetch('blocks');
       closeModal();
     } catch (err) {
       console.error('Save block error:', err);
@@ -367,6 +349,7 @@ export default function App() {
         }
         return { ...prev, sections: newSections };
       });
+      invalidatePrefetch('blocks');
     } catch (err) {
       console.error('Delete block error:', err);
       alert('Failed to delete block from server');
@@ -393,7 +376,7 @@ export default function App() {
         ...getAuthHeaders()
       },
       body: JSON.stringify({ email, id, name: trimmed }),
-    });
+    }).then(() => invalidatePrefetch('jobtypes'));
   }, [user?.email]);
 
   // ---------- Resume Operations ----------
@@ -510,6 +493,9 @@ export default function App() {
         setResume((prev) => ({ ...prev, _id: saved._id }));
       }
 
+      // Dashboard list of resumes is now stale
+      invalidatePrefetch('resumes');
+
       setSaveStatus('saved');
       setTimeout(() => setSaveStatus(''), 2000);
     } catch (err) {
@@ -562,7 +548,9 @@ export default function App() {
           ...getAuthHeaders(),
         },
         body: JSON.stringify(newBlocks),
-      }).catch((err) => console.error('Failed to persist auto-filled blocks:', err));
+      })
+        .then(() => invalidatePrefetch('blocks'))
+        .catch((err) => console.error('Failed to persist auto-filled blocks:', err));
     }
 
     const addedSections = Object.keys(result.sections || {}).filter(

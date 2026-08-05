@@ -1,15 +1,47 @@
+/* ── Canvas Block · Pressroom ───────────────────────────────── */
+
 .resumeBlock {
   position: relative;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
+  padding: 10px 12px 10px 16px;
+  border: 1.5px solid var(--border);
   border-radius: var(--radius);
   margin-bottom: 10px;
   background: #fff;
   cursor: grab;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+/* Type-colored spine — echoes the library stripe */
+.resumeBlock::before {
+  content: '';
+  position: absolute;
+  left: 5px;
+  top: 8px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 2px;
+  background: var(--border);
+}
+
+.resumeBlock[data-block-type='summary']::before {
+  background: var(--primary);
+}
+
+.resumeBlock[data-block-type='experience']::before {
+  background: var(--pink);
+}
+
+.resumeBlock[data-block-type='education']::before {
+  background: var(--yellow);
+}
+
+.resumeBlock[data-block-type='skills']::before {
+  background: var(--green);
 }
 
 .resumeBlock:hover {
-  border-color: var(--primary);
+  border-color: var(--ink);
+  box-shadow: 3px 3px 0 rgba(29, 39, 51, 0.18);
 }
 
 .dragging {
@@ -29,19 +61,23 @@
 }
 
 .iconBtn {
-  background: transparent;
-  border: none;
-  font-size: 16px;
+  background: var(--panel);
+  border: 1.5px solid var(--ink);
+  box-shadow: none;
+  font-size: 14px;
   padding: 2px 6px;
   line-height: 1;
   cursor: pointer;
-  color: var(--muted);
-  border-radius: 4px;
+  color: var(--ink);
+  border-radius: var(--radius);
 }
 
 .iconBtn:hover {
-  background: #f3f4f6;
+  background: var(--panel-2);
   color: var(--danger);
+  border-color: var(--danger);
+  transform: none;
+  box-shadow: none;
 }
 
 .entryTitle {

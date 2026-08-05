@@ -1,73 +1,238 @@
+/* ── Home · Pressroom front door ────────────────────────────── */
+
 .container {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: var(--bg);
+  padding: 32px 20px;
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--canvas-dot) 1.1px, transparent 1.1px);
+  background-size: 18px 18px;
 }
 
-.card {
-  text-align: center;
-  padding: 48px 40px;
+/* Registration marks in the page corners — the studio signature */
+.container::before,
+.container::after {
+  content: '';
+  position: fixed;
+  width: 18px;
+  height: 18px;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.container::before {
+  top: 18px;
+  left: 18px;
+  border-top: 2px solid var(--ink);
+  border-left: 2px solid var(--ink);
+}
+
+.container::after {
+  bottom: 18px;
+  right: 18px;
+  border-bottom: 2px solid var(--ink);
+  border-right: 2px solid var(--ink);
+}
+
+.sheet {
+  position: relative;
   background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  max-width: 420px;
+  border: var(--border-w) solid var(--ink);
+  border-radius: 2px;
+  box-shadow: var(--shadow-lift);
+  padding: 56px 48px 44px;
+  max-width: 620px;
   width: 100%;
 }
 
+/* Fluoro pink spine — the studio's ink stamp */
+.sheet::before {
+  content: '';
+  position: absolute;
+  left: 16px;
+  top: 24px;
+  bottom: 24px;
+  width: 8px;
+  background: var(--pink);
+  border: 1.5px solid var(--ink);
+  border-radius: 2px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin: 0 0 20px;
+  padding-left: 28px;
+}
+
 .title {
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 8px;
-  color: var(--text);
+  font-family: var(--font-display);
+  font-size: clamp(40px, 7vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.01em;
+  margin: 0 0 20px;
+  color: var(--ink);
+  padding-left: 28px;
 }
 
 .subtitle {
-  font-size: 15px;
+  font-size: 16px;
+  line-height: 1.55;
   color: var(--muted);
+  max-width: 46ch;
+  margin: 0 0 28px;
+  padding-left: 28px;
+}
+
+/* Block-type legend: the product concept as a key */
+.legend {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
   margin: 0 0 32px;
+  padding: 12px 14px 12px 28px;
+  border-top: 1.5px dashed var(--border);
+  border-bottom: 1.5px dashed var(--border);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+
+.swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  border: 1.5px solid var(--ink);
+}
+
+.swatch[data-block-type='summary'] {
+  background: var(--primary);
+}
+
+.swatch[data-block-type='experience'] {
+  background: var(--pink);
+}
+
+.swatch[data-block-type='education'] {
+  background: var(--yellow);
+}
+
+.swatch[data-block-type='skills'] {
+  background: var(--green);
 }
 
 .actions {
-  margin-bottom: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 26px;
+  padding-left: 28px;
 }
 
 .primaryBtn {
   display: inline-block;
-  padding: 12px 32px;
+  padding: 13px 26px;
   background: var(--primary);
   color: #fff;
-  border: none;
+  border: var(--border-w) solid var(--ink);
   border-radius: var(--radius);
-  font-size: 15px;
+  font-family: var(--font-mono);
+  font-size: 13px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   text-decoration: none;
   cursor: pointer;
-  transition: background 0.15s;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 .primaryBtn:hover {
-  background: #1d4ed8;
+  background: var(--primary-deep);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-lift);
 }
 
-.links {
+.primaryBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.ghostBtn {
+  display: inline-block;
+  padding: 13px 20px;
+  background: var(--panel);
+  color: var(--ink);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--muted);
-}
-
-.links a {
-  color: var(--primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   text-decoration: none;
-  font-weight: 500;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
-.links a:hover {
-  text-decoration: underline;
+.ghostBtn:hover {
+  background: var(--yellow);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow-lift);
 }
 
-.sep {
-  margin: 0 8px;
-  color: var(--border);
+.ghostBtn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+.footer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0;
+  padding-left: 28px;
+}
+
+@media (max-width: 560px) {
+  .sheet {
+    padding: 40px 24px 32px;
+  }
+
+  .eyebrow,
+  .title,
+  .subtitle,
+  .actions,
+  .footer {
+    padding-left: 20px;
+  }
+
+  .legend {
+    padding-left: 20px;
+  }
+
+  .sheet::before {
+    left: 8px;
+    width: 6px;
+  }
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import BlockModal from '../components/BlockModal/BlockModal';
 import { BLOCK_SCHEMA, DEFAULT_OWNER } from '../utils/constants';
 import { generateId } from '../utils/id';
+import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/prefetch';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
@@ -41,19 +42,13 @@ export default function Dashboard() {
     setError('');
 
     try {
-      const [resumesRes, blocksRes, jobTypesRes] = await Promise.all([
-        fetch('/api/resumes', { headers: getAuthHeaders() }),
-        fetch('/api/blocks', { headers: getAuthHeaders() }),
-        fetch('/api/user/jobtypes', { headers: getAuthHeaders() }),
+      // Shared with the builder/hover prefetch — returning from the builder
+      // usually resolves instantly from the in-memory cache.
+      const [resumesData, blocksData, jobTypesData] = await Promise.all([
+        getOrFetch('resumes', '/api/resumes'),
+        getOrFetch('blocks', '/api/blocks'),
+        getOrFetch('jobtypes', '/api/user/jobtypes'),
       ]);
-
-      if (!resumesRes.ok || !blocksRes.ok || !jobTypesRes.ok) {
-        throw new Error('Failed to fetch data');
-      }
-
-      const resumesData = await resumesRes.json();
-      const blocksData = await blocksRes.json();
-      const jobTypesData = await jobTypesRes.json();
 
       setResumes(resumesData);
       setBlocks(blocksData);
@@ -124,6 +119,7 @@ export default function Dashboard() {
       } else {
         setBlocks((prev) => [...prev, saved]);
       }
+      invalidatePrefetch('blocks');
       closeBlockModal();
     } catch (err) {
       console.error('Save block error:', err);
@@ -151,6 +147,7 @@ export default function Dashboard() {
       if (!res.ok) throw new Error('Failed to add job type');
       setJobTypes((prev) => ({ ...prev, [id]: name }));
       setNewJobTypeName('');
+      invalidatePrefetch('jobtypes');
     } catch (err) {
       setError('Failed to add job type');
     }
@@ -201,6 +198,8 @@ export default function Dashboard() {
           }),
         });
       }
+      invalidatePrefetch('blocks');
+      invalidatePrefetch('jobtypes');
     } catch (err) {
       setError('Failed to delete job type');
     }
@@ -229,6 +228,7 @@ export default function Dashboard() {
       });
 
       if (!res.ok) throw new Error('Failed to copy resume');
+      invalidatePrefetch('resumes');
       await fetchData();
     } catch (err) {
       setError('Failed to copy resume');
@@ -245,6 +245,7 @@ export default function Dashboard() {
       });
 
       if (!res.ok) throw new Error('Failed to delete resume');
+      invalidatePrefetch('resumes');
       await fetchData();
     } catch (err) {
       setError('Failed to delete resume');
@@ -268,7 +269,14 @@ export default function Dashboard() {
         <h1 className={styles.logo}>Modular Resume Builder</h1>
         <div className={styles.userSection}>
           <span className={styles.email}>{user?.email}</span>
-          <button onClick={fetchData} className={styles.refreshBtn} title="Refresh">
+          <button
+            onClick={() => {
+              invalidatePrefetch(); // manual refresh bypasses the cache
+              fetchData();
+            }}
+            className={styles.refreshBtn}
+            title="Refresh"
+          >
             ↻
           </button>
           <button onClick={handleLogout} className={styles.logoutBtn}>
@@ -298,8 +306,16 @@ export default function Dashboard() {
           ) : (
             <div className={styles.cardGrid}>
               {resumes.map((resume) => (
-                <div key={resume._id} className={styles.card}>
-                  <Link to={`/builder?resume=${resume._id}`} className={styles.cardLink}>
+                <div
+                  key={resume._id}
+                  className={styles.card}
+                  onMouseEnter={prefetchBuilderData}
+                >
+                  <Link
+                    to={`/builder?resume=${resume._id}`}
+                    className={styles.cardLink}
+                    onFocus={prefetchBuilderData}
+                  >
                     <h3 className={styles.cardTitle}>{resume.title || 'Untitled Resume'}</h3>
                     <p className={styles.cardMeta}>
                       {resume.sectionOrder?.length || 0} sections · Updated{' '}
@@ -424,6 +440,7 @@ export default function Dashboard() {
               },
               body: JSON.stringify({ id, name }),
             });
+            invalidatePrefetch('jobtypes');
           }}
           onSave={saveBlock}
           onClose={closeBlockModal}

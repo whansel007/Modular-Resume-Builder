@@ -1,3 +1,5 @@
+/* ── Debug Menu · Pressroom ─────────────────────────────────── */
+
 .wrapper {
   position: relative;
 }
@@ -7,37 +9,38 @@
   align-items: center;
   justify-content: center;
   padding: 7px 9px;
-  color: var(--muted);
-  border-color: var(--border);
-  background: #fff;
+  color: var(--ink);
+  border-color: var(--ink);
+  background: var(--panel);
 }
 
 .wrenchBtn:hover {
-  color: var(--text);
-  background: #f3f4f6;
+  background: var(--panel-2);
 }
 
 .dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
-  background: #fff;
-  border: 1px solid var(--border);
+  background: var(--panel);
+  border: var(--border-w) solid var(--ink);
   border-radius: var(--radius);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow);
   min-width: 230px;
   z-index: 100;
   overflow: hidden;
 }
 
 .dropdownTitle {
-  font-size: 11px;
-  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
+  letter-spacing: 0.12em;
+  color: var(--ink);
   padding: 8px 14px 6px;
-  border-bottom: 1px solid var(--border);
+  border-bottom: var(--border-w) solid var(--ink);
+  background: var(--panel-2);
 }
 
 .item {
@@ -48,9 +51,13 @@
   padding: 10px 14px;
   border: none;
   border-radius: 0;
+  box-shadow: none;
   background: transparent;
+  font-family: var(--font-body);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   color: var(--text);
   text-align: left;
   cursor: pointer;
@@ -59,7 +66,9 @@
 }
 
 .item:hover {
-  background: #f3f4f6;
+  background: var(--yellow);
+  transform: none;
+  box-shadow: none;
 }
 
 .icon {
@@ -67,7 +76,9 @@
 }
 
 .hint {
-  font-size: 11px;
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 400;
+  letter-spacing: 0.02em;
   color: var(--muted);
 }

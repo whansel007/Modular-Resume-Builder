@@ -1,3 +1,5 @@
+/* ── Job Description Panel · Pressroom ──────────────────────── */
+
 .container {
   padding: 1rem;
   display: flex;
@@ -8,35 +10,40 @@
 }
 
 .title {
-  font-size: 1.1rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   margin: 0;
-  color: var(--text-primary, #1a1a1a);
+  color: var(--ink);
 }
 
 .description {
   font-size: 0.85rem;
-  color: var(--text-secondary, #666);
+  color: var(--muted);
   margin: 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  font-family: inherit;
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-body);
   font-size: 0.9rem;
+  background: #fff;
   resize: vertical;
   min-height: 200px;
   line-height: 1.5;
+  margin-top: 0;
 }
 
 .textarea:focus {
   outline: none;
-  border-color: var(--primary-color, #007bff);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  border-color: var(--primary);
+  box-shadow: 3px 3px 0 var(--primary);
 }
 
 .buttonGroup {
@@ -47,18 +54,29 @@
 .extractBtn {
   flex: 1;
   padding: 0.6rem 1rem;
-  background-color: var(--primary-color, #007bff);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  background: var(--primary);
+  color: #fff;
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  transition: background-color 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
 }
 
 .extractBtn:hover:not(:disabled) {
-  background-color: var(--primary-hover, #0056b3);
+  background: var(--primary-deep);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
+}
+
+.extractBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .extractBtn:disabled {
@@ -68,18 +86,29 @@
 
 .clearBtn {
   padding: 0.6rem 1rem;
-  background-color: transparent;
-  color: var(--text-secondary, #666);
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 6px;
-  font-size: 0.9rem;
+  background: var(--panel);
+  color: var(--ink);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .clearBtn:hover:not(:disabled) {
-  background-color: var(--bg-hover, #f5f5f5);
-  border-color: var(--text-secondary, #666);
+  background: var(--panel-2);
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
+}
+
+.clearBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .clearBtn:disabled {
@@ -88,21 +117,23 @@
 }
 
 .error {
-  color: var(--error-color, #dc3545);
+  color: var(--danger);
   font-size: 0.85rem;
   margin: 0;
-  padding: 0.5rem;
-  background-color: rgba(220, 53, 69, 0.1);
-  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  background: var(--danger-light);
+  border: 1.5px solid var(--danger);
+  border-radius: var(--radius);
 }
 
 .success {
-  color: var(--success-color, #198754);
+  color: var(--green);
   font-size: 0.85rem;
   margin: 0;
-  padding: 0.5rem;
-  background-color: rgba(25, 135, 84, 0.1);
-  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  background: var(--green-light);
+  border: 1.5px solid var(--green);
+  border-radius: var(--radius);
 }
 
 .keywordsSection {
@@ -120,10 +151,13 @@
 }
 
 .keywordsTitle {
-  font-size: 0.95rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   margin: 0;
-  color: var(--text-primary, #1a1a1a);
+  color: var(--ink);
 }
 
 .keywordsActions {
@@ -134,20 +168,25 @@
 .linkBtn {
   background: none;
   border: none;
+  box-shadow: none;
   padding: 0;
-  font-size: 0.75rem;
-  color: var(--primary-color, #007bff);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  color: var(--primary);
   cursor: pointer;
   text-decoration: underline;
 }
 
 .linkBtn:hover {
-  color: var(--primary-hover, #0056b3);
+  color: var(--primary-deep);
+  transform: none;
+  box-shadow: none;
 }
 
 .checklistHint {
   font-size: 0.78rem;
-  color: var(--text-secondary, #666);
+  color: var(--muted);
   margin: 0;
 }
 
@@ -171,48 +210,59 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background-color 0.15s;
 }
 
 .checklistLabel:hover {
-  background-color: var(--bg-hover, #f5f5f5);
+  background: var(--panel-2);
 }
 
 .checklistCheckbox {
   width: 15px;
   height: 15px;
-  accent-color: var(--primary-color, #007bff);
+  accent-color: var(--primary);
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .checklistText {
   font-size: 0.85rem;
-  color: var(--text-primary, #1a1a1a);
+  color: var(--ink);
 }
 
 .checklistTextUnchecked {
-  color: var(--text-secondary, #999);
+  color: var(--muted);
   text-decoration: line-through;
 }
 
+/* Auto-fill: marker-yellow action, the panel's one loud moment */
 .autofillBtn {
   margin-top: 0.5rem;
-  padding: 0.6rem 1rem;
-  background-color: var(--success-color, #198754);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  padding: 0.65rem 1rem;
+  background: var(--yellow);
+  color: var(--ink);
+  border: var(--border-w) solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  transition: opacity 0.2s;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
 }
 
 .autofillBtn:hover:not(:disabled) {
-  opacity: 0.9;
+  transform: translate(-1px, -1px);
+  box-shadow: var(--shadow);
+}
+
+.autofillBtn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
 }
 
 .autofillBtn:disabled {

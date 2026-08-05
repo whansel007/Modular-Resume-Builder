@@ -146,5 +146,6 @@ vite.config.ts.timestamp-*
 #     common/cache.gitignore | sort -u > .gitignore
 server/.env
 .vercel
+.vercel-tmp/
 .env*
 !.env.example

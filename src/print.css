@@ -45,6 +45,8 @@
   [class*='canvasScroll'] {
     padding: 0 !important;
     overflow: visible !important;
+    background-image: none !important;
+    background-color: #fff !important;
   }
 
   /* ── Resume page ── */
@@ -52,9 +54,19 @@
     width: 100% !important;
     min-height: auto !important;
     box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
     /* Replaces the removed @page margin so content isn't flush to edges */
     padding: 15mm !important;
     margin: 0 !important;
+  }
+
+  /* Hide studio decorations (crop marks, type spines) in export */
+  [class*='resumePage']::before,
+  [class*='resumePage']::after,
+  [class*='resumeBlock']::before {
+    display: none !important;
   }
 
   /* ── Resume header: name + contact ── */
