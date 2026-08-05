@@ -41,7 +41,10 @@ export default function AIChat({ resume, blocks }) {
     try {
       const res = await fetch('/api/resume-chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth-token')}`,
+        },
         body: JSON.stringify({
           messages: nextMessages.slice(-10),
           resume: {

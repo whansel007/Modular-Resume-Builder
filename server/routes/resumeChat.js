@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
 
@@ -39,7 +40,7 @@ function buildResumeContext(resume, blocks) {
 }
 
 // POST /api/resume-chat - chat assistant that answers questions about the current resume
-router.post('/', async (req, res) => {
+router.post('/', requireAuth, async (req, res) => {
   try {
     const { messages, resume, blocks } = req.body || {};
 
