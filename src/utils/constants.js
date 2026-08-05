@@ -1,5 +1,6 @@
 // Default job types dictionary: { id: name }
-// New users get these seeded on first login
+// Used as a client-side fallback when the API fetch fails.
+// IMPORTANT: Keep in sync with server/models/User.js and api/lib/models/User.js (DEFAULT_JOB_TYPES).
 export const DEFAULT_JOB_TYPES_MAP = {
   jt1: 'Software Development',
   jt2: 'Management',

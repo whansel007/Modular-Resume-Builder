@@ -2,6 +2,7 @@ import mongoose from 'mongoose';
 
 // Default job types seeded for new accounts (schema default) and backfilled
 // once for pre-existing accounts that never received them.
+// IMPORTANT: Keep in sync with server/models/User.js and src/utils/constants.js (DEFAULT_JOB_TYPES_MAP).
 export const DEFAULT_JOB_TYPES = {
   jt1: 'Software Development',
   jt2: 'Management',

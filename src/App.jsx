@@ -64,7 +64,11 @@ export default function App() {
   // ---------- Fetch job types from user profile ----------
   useEffect(() => {
     if (!user?.email) return;
-    fetch('/api/user/jobtypes', { headers: getAuthHeaders() })
+    const controller = new AbortController();
+    fetch('/api/user/jobtypes', {
+      headers: getAuthHeaders(),
+      signal: controller.signal,
+    })
       .then((res) => {
         // A 401 here means the stored token has expired or been revoked while
         // auth-user is still present. Clear the session and send the user to
@@ -82,9 +86,11 @@ export default function App() {
         if (data) setJobTypes(data);
       })
       .catch((err) => {
+        if (err.name === 'AbortError') return;
         console.error('Failed to fetch job types:', err);
         setJobTypes(DEFAULT_JOB_TYPES_MAP);
       });
+    return () => controller.abort();
   }, [user?.email, navigate]);
 
   // ---------- Reset resume if ?new=true ----------
