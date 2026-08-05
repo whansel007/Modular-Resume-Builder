@@ -1,4 +1,4 @@
-import { requireAuth } from './lib/auth.js';
+import { requireAuth } from '../api-lib/auth.js';
 
 // Build a readable summary of the current resume with block content resolved
 function buildResumeContext(resume, blocks) {

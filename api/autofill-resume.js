@@ -1,4 +1,4 @@
-import { requireAuth } from './lib/auth.js';
+import { requireAuth } from '../api-lib/auth.js';
 
 const DEFAULT_SECTIONS = ['Summary', 'Experience', 'Education', 'Skills'];
 
