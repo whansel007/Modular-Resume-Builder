@@ -105,6 +105,7 @@ export default function App() {
         if (err.status === 401) {
           localStorage.removeItem('auth-token');
           localStorage.removeItem('auth-user');
+          invalidatePrefetch(); // drop cached data from the dead session
           navigate('/login');
           return;
         }

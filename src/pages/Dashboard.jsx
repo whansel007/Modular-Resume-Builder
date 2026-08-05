@@ -149,6 +149,7 @@ export default function Dashboard() {
   const handleLogout = () => {
     localStorage.removeItem('auth-token');
     localStorage.removeItem('auth-user');
+    invalidatePrefetch(); // never leak this account's cached data to the next login
     setUser(null);
     navigate('/');
   };

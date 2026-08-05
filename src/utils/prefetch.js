@@ -10,10 +10,16 @@ const authHeaders = () => ({
   Authorization: `Bearer ${localStorage.getItem('auth-token')}`,
 });
 
+// Entries are scoped to the current auth token so logging out and back in as
+// another account (no page reload in an SPA) never serves the previous
+// account's data.
+const scopedKey = (key) => `${key}::${localStorage.getItem('auth-token') || 'anon'}`;
+
 // Returns a promise for the data. Fresh cache entries are reused; expired
 // ones are refetched. Failed requests are evicted so the next call retries.
 export function getOrFetch(key, url) {
-  const entry = cache.get(key);
+  const ck = scopedKey(key);
+  const entry = cache.get(ck);
   if (entry && Date.now() - entry.at < TTL_MS) return entry.promise;
 
   const promise = fetch(url, { headers: authHeaders() }).then((res) => {
@@ -24,9 +30,9 @@ export function getOrFetch(key, url) {
     }
     return res.json();
   });
-  promise.catch(() => cache.delete(key));
+  promise.catch(() => cache.delete(ck));
 
-  cache.set(key, { promise, at: Date.now() });
+  cache.set(ck, { promise, at: Date.now() });
   return promise;
 }
 
@@ -38,8 +44,8 @@ export function prefetchBuilderData() {
 }
 
 // Drop one cached endpoint (e.g., after mutating that resource) or the
-// whole cache when no key is given.
+// whole cache when no key is given (e.g., on logout/session expiry).
 export function invalidatePrefetch(key) {
-  if (key) cache.delete(key);
+  if (key) cache.delete(scopedKey(key));
   else cache.clear();
 }
