@@ -167,7 +167,7 @@ function parseExperienceEntry(entryLines, sectionX0) {
       startDate = compDates.startDate;
       endDate = compDates.endDate;
     }
-    const parts = compDates.rest.split(/\s+[—–-]\s+/);
+    const parts = compDates.rest.split(/\s*[—–-]\s*/);
     company = (parts[0] || '').trim();
     location = (parts[1] || '').trim();
     if (!location && company.includes(', ')) {
@@ -189,6 +189,15 @@ function parseExperienceEntry(entryLines, sectionX0) {
     }
   }
 
+  // Wrapped lines after role/company are description text — the app's own
+  // export writes descriptions as plain paragraphs without bullet glyphs.
+  const extra = headerLines.slice(2).map((t) => t.trim()).filter(Boolean);
+  let description = bullets.map((b) => `• ${b}`).join('\n');
+  if (extra.length) {
+    const paragraph = extra.join(' ');
+    description = description ? `${description}\n${paragraph}` : paragraph;
+  }
+
   return {
     type: 'experience',
     name: [role, company].filter(Boolean).join(' — ') || 'Experience',
@@ -198,7 +207,7 @@ function parseExperienceEntry(entryLines, sectionX0) {
       location,
       startDate,
       endDate,
-      description: bullets.map((b) => `• ${b}`).join('\n'),
+      description,
     },
   };
 }
@@ -215,25 +224,46 @@ function parseEducationEntry(entryLines, sectionX0) {
   }
   if (!headerLines.length) return null;
 
-  const degreeDates = splitDates(headerLines[0] || '');
-  const degree = degreeDates.rest || headerLines[0] || '';
-  let startDate = degreeDates.startDate;
-  let endDate = degreeDates.endDate;
-
+  // Either order is possible: "Degree · dates" then "Institution" (classic),
+  // or "Institution" then "Degree, Field · dates" (the app's own export).
+  const degreeLike = (t) =>
+    /(bachelor|master|doctor|ph\.?d|mba|b\.?sc|m\.?sc|b\.?a\b|m\.?a\b|diploma|certificat|degree|coursework)/i.test(t);
+  const first = splitDates(headerLines[0] || '');
+  const second = headerLines[1] ? splitDates(headerLines[1]) : null;
+  let degree = '';
   let institution = '';
-  if (headerLines[1]) {
-    const instDates = splitDates(headerLines[1]);
-    if (!startDate) {
-      startDate = instDates.startDate;
-      endDate = instDates.endDate;
+  let startDate = '';
+  let endDate = '';
+  if (second && second.startDate && (!first.startDate || degreeLike(second.rest))) {
+    institution = first.rest.split(/\s*[—–]\s*/)[0].trim();
+    degree = second.rest || headerLines[1] || '';
+    startDate = second.startDate;
+    endDate = second.endDate;
+  } else {
+    degree = first.rest || headerLines[0] || '';
+    startDate = first.startDate;
+    endDate = first.endDate;
+    if (second) {
+      if (!startDate) {
+        startDate = second.startDate;
+        endDate = second.endDate;
+      }
+      institution = second.rest.split(/\s*[—–]\s*/)[0].trim();
     }
-    institution = instDates.rest.split(/\s+[—–]\s+/)[0].trim();
   }
 
   let field = '';
-  const fieldMatch = degree.match(/(?:in|of)\s+(.+)$/i);
-  if (fieldMatch) field = fieldMatch[1].trim();
-  const gpaLine = bullets.find((b) => /gpa/i.test(b)) || '';
+  // "Bachelor of Science, Computer Science" (site export) or "BSc in X".
+  const commaField = degree.match(/^([A-Za-z.\s]+?(?:of|in)\s+[A-Za-z\s]+?)\s*,\s*(.+)$/i);
+  if (commaField) field = commaField[2].trim();
+  else {
+    const fieldMatch = degree.match(/(?:in|of)\s+(.+)$/i);
+    if (fieldMatch) field = fieldMatch[1].trim();
+  }
+  // GPA may sit in a bullet or a plain follow-up line (the app's export).
+  // "GPA" followed by a digit — excludes credential lines like "Credential ID".
+  const detailLines = [...bullets, ...headerLines.slice(2)];
+  const gpaLine = detailLines.find((b) => /\bgpa\b\s*:?\s*\d/i.test(b)) || '';
 
   return {
     type: 'education',
@@ -259,17 +289,35 @@ export function parseResumeLines(lines) {
 
   const bodySize = median(lines.map((l) => l.size)) || 10;
 
+  // Gentler than looksLikeHeading: catches block titles inside a section
+  // ("Professional Summary", skill categories) whose size step is smaller
+  // than a real section heading's. Not used for segment splitting.
+  const subheadingLike = (line) => {
+    const t = line.text.trim();
+    return t.length > 0 && t.length <= 60 && line.size >= bodySize + 0.4;
+  };
+
   // Split into segments: a heading starts a new segment; lines before the
   // first heading form the header (contact info) segment.
   const segments = [];
   let current = { title: null, type: null, lines: [] };
   for (const line of lines) {
-    const heading = looksLikeHeading(line, bodySize);
-    const type = heading ? matchSectionType(line.text.replace(/[:.]+$/, '').trim()) : null;
+    // Known section titles always split, regardless of styling — the app's
+    // own PDF export renders them as small all-caps labels (9pt) above
+    // larger entry titles, which defeats the font-size heading heuristic.
+    const type = matchSectionType(line.text.replace(/[:.]+$/, '').trim());
+    const heading = type !== null || looksLikeHeading(line, bodySize);
     // Only *known* headings split segments; unknown big lines stay as content.
     if (heading && (type || line.text.length <= 40)) {
-      if (current.lines.length || current.title) segments.push(current);
-      current = { title: line.text.replace(/[:.]+$/, '').trim(), type, lines: [] };
+      // "SUMMARY" immediately followed by a styled "Professional Summary"
+      // (site export): keep the inner, more descriptive title instead of
+      // opening an empty second segment of the same type.
+      if (current.title && current.type && current.type === type && !current.lines.length) {
+        current.title = line.text.replace(/[:.]+$/, '').trim();
+      } else {
+        if (current.lines.length || current.title) segments.push(current);
+        current = { title: line.text.replace(/[:.]+$/, '').trim(), type, lines: [] };
+      }
     } else {
       current.lines.push(line);
     }
@@ -289,7 +337,7 @@ export function parseResumeLines(lines) {
       ) || '';
     const joined = texts.join(' ');
     personalInfo.email = joined.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/)?.[0] || '';
-    personalInfo.phone = joined.match(/(\+?\d[\d\s().-]{7,}\d)/)?.[0]?.trim() || '';
+    personalInfo.phone = joined.match(/(\+?\(?\d[\d\s().-]{7,}\d)/)?.[0]?.trim() || '';
   }
 
   const blocks = [];
@@ -297,7 +345,8 @@ export function parseResumeLines(lines) {
 
   segments.forEach((seg, segIdx) => {
     if (!seg.title) return;
-    if (!seg.type || !seg.lines.length) {
+    // Summaries may legitimately be name-only (empty body in the export).
+    if (!seg.type || (!seg.lines.length && seg.type !== 'summary')) {
       // The header (name/contact) segment before any typed section is not
       // really a skipped section.
       if (seg.lines.length && segIdx > 0) skippedSections.push(seg.title);
@@ -306,42 +355,91 @@ export function parseResumeLines(lines) {
     const sectionX0 = Math.min(...seg.lines.map((l) => l.x0));
 
     if (seg.type === 'summary') {
-      const body = seg.lines.map((l) => l.text).join(' ');
+      // The app's export renders the block name ("Professional Summary") as a
+      // slightly larger first line — peel it off as name/headline.
+      const segLines = [...seg.lines];
+      let name = seg.title;
+      if (segLines.length && subheadingLike(segLines[0])) {
+        name = segLines.shift().text;
+      }
+      const body = segLines.map((l) => l.text).join(' ');
       blocks.push({
         type: 'summary',
-        name: `${seg.title}`,
-        fields: { headline: personalInfo.name || '', body },
+        name,
+        fields: { headline: name, body },
       });
       return;
     }
 
     if (seg.type === 'skills') {
-      const items = [];
-      for (const l of seg.lines) {
-        const t = l.text.replace(BULLET_RE, '').trim();
-        if (!t) continue;
-        items.push(...(t.includes(',') ? t.split(',').map((s) => s.trim()).filter(Boolean) : [t]));
+      // The app's own export nests a category title ("Frontend") above each
+      // comma list — emit one block per category so the split survives.
+      const headingLines = seg.lines.filter((l) => subheadingLike(l));
+      if (headingLines.length) {
+        let cat = null;
+        let items = [];
+        const flush = () => {
+          if (cat && items.length) {
+            blocks.push({
+              type: 'skills',
+              name: cat,
+              fields: { category: cat, skills: items.join(', ') },
+            });
+          }
+          cat = null;
+          items = [];
+        };
+        for (const l of seg.lines) {
+          if (subheadingLike(l)) {
+            flush();
+            cat = l.text;
+          } else {
+            const t = l.text.replace(BULLET_RE, '').trim();
+            if (!t) continue;
+            items.push(...(t.includes(',') ? t.split(',').map((s) => s.trim()).filter(Boolean) : [t]));
+          }
+        }
+        flush();
+      } else {
+        const items = [];
+        for (const l of seg.lines) {
+          const t = l.text.replace(BULLET_RE, '').trim();
+          if (!t) continue;
+          items.push(...(t.includes(',') ? t.split(',').map((s) => s.trim()).filter(Boolean) : [t]));
+        }
+        blocks.push({
+          type: 'skills',
+          name: seg.title,
+          fields: { category: seg.title, skills: items.join(', ') },
+        });
       }
-      blocks.push({
-        type: 'skills',
-        name: seg.title,
-        fields: { category: seg.title, skills: items.join(', ') },
-      });
       return;
     }
 
-    // experience / education: group lines into entries. A new entry starts
-    // at a non-bullet line at (near) the section's left edge.
+    // experience / education: group lines into entries. Prefer the export's
+    // own signal — entry titles render larger than their detail lines — and
+    // fall back to indentation/bullets for freeform resumes.
+    const sizes = seg.lines.map((l) => l.size);
+    const headingSize = Math.max(...sizes);
+    const bodySizeInSec = median(sizes);
+    const useSizeGrouping = headingSize >= bodySizeInSec + 0.5;
     const entries = [];
-    for (const line of seg.lines) {
-      const bullet = isBulletLine(line, sectionX0);
-      const atEdge = line.x0 - sectionX0 <= 6;
-      if (!bullet && atEdge && (!entries.length || entries[entries.length - 1].length > 1)) {
-        entries.push([line]);
-      } else if (!entries.length) {
-        entries.push([line]);
-      } else {
-        entries[entries.length - 1].push(line);
+    if (useSizeGrouping) {
+      for (const line of seg.lines) {
+        if (line.size >= headingSize - 0.2 || !entries.length) entries.push([line]);
+        else entries[entries.length - 1].push(line);
+      }
+    } else {
+      for (const line of seg.lines) {
+        const bullet = isBulletLine(line, sectionX0);
+        const atEdge = line.x0 - sectionX0 <= 6;
+        if (!bullet && atEdge && (!entries.length || entries[entries.length - 1].length > 1)) {
+          entries.push([line]);
+        } else if (!entries.length) {
+          entries.push([line]);
+        } else {
+          entries[entries.length - 1].push(line);
+        }
       }
     }
     const parser = seg.type === 'experience' ? parseExperienceEntry : parseEducationEntry;
