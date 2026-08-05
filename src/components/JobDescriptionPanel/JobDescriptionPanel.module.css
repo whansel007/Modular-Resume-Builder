@@ -74,8 +74,8 @@
   cursor: not-allowed;
 }
 
-/* Animated ellipsis for long-running actions: ... → .. → . → ...
-   All three dots always occupy space — they blink off from the end via
+/* Animated ellipsis for long-running actions: . → .. → ... → .
+   All three dots always occupy space — they blink on from the end via
    opacity only, so the label stays perfectly centered through the cycle. */
 .dots {
   display: inline-block;
@@ -93,27 +93,27 @@
   animation: dotsThird 1.5s infinite;
 }
 
-/* Second dot visible for the first two thirds of the cycle */
+/* Second dot appears after the first third of the cycle */
 @keyframes dotsSecond {
   0%,
-  66.66% {
-    opacity: 1;
-  }
-  66.67%,
-  100% {
-    opacity: 0;
-  }
-}
-
-/* Third dot visible only for the first third of the cycle */
-@keyframes dotsThird {
-  0%,
   33.33% {
-    opacity: 1;
+    opacity: 0;
   }
   33.34%,
   100% {
+    opacity: 1;
+  }
+}
+
+/* Third dot appears only for the last third of the cycle */
+@keyframes dotsThird {
+  0%,
+  66.66% {
     opacity: 0;
+  }
+  66.67%,
+  100% {
+    opacity: 1;
   }
 }
 
