@@ -368,6 +368,78 @@
   padding: 20px;
 }
 
+/* Easter egg: Konami code reveals the hackathon team photo as a slightly
+   tilted polaroid-style popup. */
+.eggOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(29, 39, 51, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 300;
+  padding: 20px;
+}
+
+.eggCard {
+  position: relative;
+  width: min(560px, 100%);
+  background: var(--bg);
+  border: var(--border-w) solid var(--ink);
+  border-radius: 4px;
+  box-shadow: 6px 6px 0 var(--ink);
+  padding: 18px 18px 12px;
+  transform: rotate(-1.5deg);
+  animation: eggPop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes eggPop {
+  from {
+    transform: rotate(-6deg) scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: rotate(-1.5deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.eggPhoto {
+  display: block;
+  width: 100%;
+  border: var(--border-w) solid var(--ink);
+  border-radius: 2px;
+}
+
+.eggCaption {
+  margin: 12px 4px 2px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.eggClose {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: var(--border-w) solid var(--ink);
+  border-radius: 50%;
+  background: var(--bg);
+  box-shadow: 2px 2px 0 var(--ink);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.eggClose:hover {
+  background: #ffe0e0;
+}
+
 .variantsPanel {
   width: min(480px, 100%);
   max-height: 80vh;

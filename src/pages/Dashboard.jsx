@@ -6,7 +6,16 @@ import ImportModal from '../components/ImportModal/ImportModal';
 import { BLOCK_SCHEMA, DEFAULT_OWNER } from '../utils/constants';
 import { generateId } from '../utils/id';
 import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/prefetch';
+import hackathonTeam from '../assets/hackathon-team.jpg';
 import styles from './Dashboard.module.css';
+
+// Easter egg: type the Konami code anywhere on the dashboard to reveal the
+// hackathon team photo. Letters are matched case-insensitively.
+const KONAMI_CODE = [
+  'ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
+  'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight',
+  'b', 'a',
+];
 
 // Popup listing all child variants saved under a library block.
 function VariantsModal({ parent, variants, getDisplayText, onClose, onEdit, onDuplicate, onDelete }) {
@@ -81,6 +90,9 @@ export default function Dashboard() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importing, setImporting] = useState(false);
 
+  // Easter egg popup (Konami code)
+  const [eggOpen, setEggOpen] = useState(false);
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!user?.email) {
@@ -102,6 +114,48 @@ export default function Dashboard() {
       /* sessionStorage unavailable */
     }
   }, [user?.email, navigate]);
+
+  // Konami code listener: track progress through the sequence across
+  // keypresses. Keys typed into form fields never count, so the code can
+  // only be entered on the page itself.
+  useEffect(() => {
+    let progress = 0;
+    const onKeyDown = (e) => {
+      const target = e.target;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable)
+      )
+        return;
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      if (key === KONAMI_CODE[progress]) {
+        progress += 1;
+        if (progress === KONAMI_CODE.length) {
+          progress = 0;
+          setEggOpen(true);
+        }
+      } else {
+        // A wrong key restarts the sequence (it might be a fresh ArrowUp).
+        progress = key === KONAMI_CODE[0] ? 1 : 0;
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Escape closes the easter egg popup.
+  useEffect(() => {
+    if (!eggOpen) return;
+    const onKey = (e) => {
+      if (e.key === 'Escape') setEggOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [eggOpen]);
 
   // Block modal state
   const [blockModalOpen, setBlockModalOpen] = useState(false);
@@ -841,6 +895,28 @@ export default function Dashboard() {
           onImport={handlePdfImport}
           onClose={() => setImportModalOpen(false)}
         />
+      )}
+
+      {eggOpen && (
+        <div className={styles.eggOverlay} onClick={() => setEggOpen(false)}>
+          <div className={styles.eggCard} onClick={(e) => e.stopPropagation()}>
+            <button
+              className={styles.eggClose}
+              onClick={() => setEggOpen(false)}
+              title="Close"
+            >
+              &times;
+            </button>
+            <img
+              src={hackathonTeam}
+              alt="The hackathon team"
+              className={styles.eggPhoto}
+            />
+            <p className={styles.eggCaption}>
+              You found the secret! Meet the team behind the Resume Builder ✌️
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );
