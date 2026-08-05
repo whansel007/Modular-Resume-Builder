@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { useExportPdf } from './hooks/useExportPdf';
@@ -64,6 +64,9 @@ export default function App() {
   });
   // Auto-fill needs the block library loaded before it can place blocks.
   const [extBlocksReady, setExtBlocksReady] = useState(false);
+  // One-shot guard so the reset effect below can't re-blank the resume when
+  // searchParams change (extImport stays truthy for the panel's autoRun prop).
+  const extConsumedRef = useRef(false);
 
   // personalInfo now lives inside the resume object
   const personalInfo = resume.personalInfo || {};
@@ -105,7 +108,15 @@ export default function App() {
 
   // ---------- Reset resume if ?new=true (or an extension deep link arrived) ----------
   useEffect(() => {
+    // While logged out the builder redirects to /login anyway; leaving the
+    // payload untouched lets the Dashboard resume the flow after sign-in.
+    if (!user?.email) return;
     if (searchParams.get('new') !== 'true' && !extImport) return;
+    if (extImport && extConsumedRef.current) {
+      setSearchParams({});
+      return;
+    }
+    if (extImport) extConsumedRef.current = true;
 
     setResume(
       extImport?.title ? { ...BLANK_RESUME, title: extImport.title } : BLANK_RESUME,
@@ -137,7 +148,7 @@ export default function App() {
     }
 
     setSearchParams({});
-  }, [searchParams, setSearchParams, setResume, setBlocks, extImport]);
+  }, [searchParams, setSearchParams, setResume, setBlocks, extImport, user?.email]);
 
   // ---------- Fetch resume and blocks from MongoDB if ?resume=<id> ----------
   useEffect(() => {
@@ -756,14 +767,18 @@ export default function App() {
             </button>
           </div>
           <div className={styles.tabContent}>
-            {activeRightTab === 'properties' ? (
+            {/* Both panels stay mounted; visibility toggles via CSS. Remounting
+                JobDescriptionPanel would reset its one-shot refs and re-run the
+                paid extract + auto-fill calls on every tab switch. */}
+            <div style={{ display: activeRightTab === 'properties' ? 'contents' : 'none' }}>
               <PropertiesPanel
                 resume={resume}
                 personalInfo={personalInfo}
                 onSetTemplate={setTemplate}
                 onUpdatePersonalInfo={updatePersonalInfoField}
               />
-            ) : (
+            </div>
+            <div style={{ display: activeRightTab === 'jobDescription' ? 'contents' : 'none' }}>
               <JobDescriptionPanel
                 onKeywordsExtracted={setExtractedKeywords}
                 onAutoFill={handleAutoFill}
@@ -771,7 +786,7 @@ export default function App() {
                 autoRun={!!(extImport && extImport.autofill)}
                 autoFillReady={extBlocksReady}
               />
-            )}
+            </div>
           </div>
         </div>
       </div>
