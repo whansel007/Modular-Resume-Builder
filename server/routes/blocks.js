@@ -18,7 +18,7 @@ router.get('/', requireAuth, async (req, res) => {
 // POST upsert a block (uses _id from body)
 router.post('/', requireAuth, async (req, res) => {
   try {
-    const { id, type, jobTypeIds, ...contentFields } = req.body;
+    const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = req.body;
     
     // Check if block exists and verify ownership
     const existingBlock = await Block.findById(id);
@@ -26,9 +26,14 @@ router.post('/', requireAuth, async (req, res) => {
       return res.status(403).json({ error: 'Not authorized to modify this block' });
     }
     
+    // resumeId/variantOf are only touched when provided, so a plain save
+    // of an existing variant keeps its resume scope.
+    const update = { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields };
+    if (resumeId !== undefined) update.resumeId = resumeId || null;
+    if (variantOf !== undefined) update.variantOf = variantOf || null;
     const block = await Block.findByIdAndUpdate(
       id,
-      { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields },
+      update,
       { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     );
     res.status(201).json(block);
@@ -45,11 +50,14 @@ router.post('/bulk', requireAuth, async (req, res) => {
     if (!Array.isArray(blocks)) return res.status(400).json({ error: 'Expected array of blocks' });
 
     const ops = blocks.map((b) => {
-      const { id, type, jobTypeIds, ...contentFields } = b;
+      const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = b;
+      const update = { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields };
+      if (resumeId !== undefined) update.resumeId = resumeId || null;
+      if (variantOf !== undefined) update.variantOf = variantOf || null;
       return {
         updateOne: {
           filter: { _id: id, owner: req.user.email },
-          update: { _id: id, owner: req.user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields },
+          update,
           upsert: true,
         },
       };

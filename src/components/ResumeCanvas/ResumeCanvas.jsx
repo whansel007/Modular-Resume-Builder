@@ -144,6 +144,7 @@ export default function ResumeCanvas({
                       sectionId={sectionTitle}
                       index={idx}
                       rendered={rendered}
+                      isVariant={!!block.resumeId}
                       onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
                       onEdit={() => onEditBlock(blockId)}
                       formatBody={formatBody}

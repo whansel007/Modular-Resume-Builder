@@ -1,5 +1,6 @@
 import { connectToDatabase } from '../../api-lib/db.js';
 import Resume from '../../api-lib/models/Resume.js';
+import Block from '../../api-lib/models/Block.js';
 import { requireAuth } from '../../api-lib/auth.js';
 
 export default async function handler(req, res) {
@@ -47,6 +48,9 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Not authorized to delete this resume' });
       }
       await Resume.findByIdAndDelete(id);
+      // Cascade-delete blocks saved as variants for this resume — they are
+      // resume-scoped and meaningless without it.
+      await Block.deleteMany({ owner: user.email, resumeId: id });
       return res.json({ success: true });
     }
 

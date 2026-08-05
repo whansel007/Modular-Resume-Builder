@@ -156,7 +156,18 @@ export default function JobDescriptionPanel({
           onClick={handleExtract}
           disabled={loading || !jobDescription.trim()}
         >
-          {loading ? <>Extracting<span className={styles.dots} aria-hidden="true" /></> : 'Extract Keywords'}
+          {loading ? (
+            <>
+              Extracting
+              <span className={styles.dots} aria-hidden="true">
+                <span>.</span>
+                <span>.</span>
+                <span>.</span>
+              </span>
+            </>
+          ) : (
+            'Extract Keywords'
+          )}
         </button>
         <button
           className={styles.clearBtn}
@@ -216,7 +227,18 @@ export default function JobDescriptionPanel({
               onClick={handleAutoFill}
               disabled={autofilling || selectedKeywords.length === 0}
             >
-              {autofilling ? <>Auto-filling<span className={styles.dots} aria-hidden="true" /></> : '✦ Auto-fill Resume'}
+              {autofilling ? (
+                <>
+                  Auto-filling
+                  <span className={styles.dots} aria-hidden="true">
+                    <span>.</span>
+                    <span>.</span>
+                    <span>.</span>
+                  </span>
+                </>
+              ) : (
+                '✦ Auto-fill Resume'
+              )}
             </button>
           )}
         </div>

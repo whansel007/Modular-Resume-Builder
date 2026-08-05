@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import Resume from '../models/Resume.js';
+import Block from '../models/Block.js';
 import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
@@ -55,6 +56,9 @@ router.delete('/', requireAuth, async (req, res) => {
     }
     
     await Resume.findByIdAndDelete(id);
+    // Cascade-delete blocks saved as variants for this resume — they are
+    // resume-scoped and meaningless without it.
+    await Block.deleteMany({ owner: req.user.email, resumeId: id });
     res.json({ success: true });
   } catch (err) {
     console.error('Failed to delete resume:', err);

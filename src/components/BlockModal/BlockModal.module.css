@@ -127,3 +127,28 @@
 .primaryBtn:hover {
   background: var(--primary-deep);
 }
+
+/* "Save as Variant" — secondary action, resume-scoped copy */
+.variantBtn {
+  background: var(--yellow);
+  color: var(--ink);
+  border-color: var(--ink);
+}
+
+.variantBtn:hover {
+  background: var(--yellow);
+  filter: brightness(0.95);
+}
+
+/* Scope banner shown when editing a resume-scoped variant block */
+.variantNote {
+  margin: 0;
+  padding: 10px 16px;
+  border-bottom: var(--border-w) dashed var(--ink);
+  background: var(--panel-2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+}

@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { id, type, jobTypeIds, ...contentFields } = req.body;
+      const { id, type, jobTypeIds, resumeId, variantOf, ...contentFields } = req.body;
       
       // Check if block exists and verify ownership
       const existingBlock = await Block.findById(id);
@@ -24,10 +24,15 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'Not authorized to modify this block' });
       }
       
-      // Force owner to be the authenticated user's email
+      // Force owner to be the authenticated user's email.
+      // resumeId/variantOf are only touched when provided, so a plain save
+      // of an existing variant keeps its resume scope.
+      const update = { _id: id, owner: user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields };
+      if (resumeId !== undefined) update.resumeId = resumeId || null;
+      if (variantOf !== undefined) update.variantOf = variantOf || null;
       const block = await Block.findByIdAndUpdate(
         id,
-        { _id: id, owner: user.email, type, jobTypeIds: jobTypeIds || [], content: contentFields },
+        update,
         { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
       );
       return res.status(201).json(block);

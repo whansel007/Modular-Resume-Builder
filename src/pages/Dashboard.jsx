@@ -229,13 +229,16 @@ export default function Dashboard() {
   // ---------- Account defaults (prefill for new resumes) ----------
 
   const openAccountModal = async () => {
-    setAccountModalOpen(true);
+    // Load defaults BEFORE opening — the modal initializes its form from
+    // `initial` once, so it must already be available when it mounts.
+    // (getOrFetch is cached, so repeat opens are instant.)
     try {
       const data = await getOrFetch('defaults', '/api/user/defaults');
       setDefaultInfo(data);
     } catch {
       setDefaultInfo({});
     }
+    setAccountModalOpen(true);
   };
 
   const saveDefaultInfo = async (info) => {

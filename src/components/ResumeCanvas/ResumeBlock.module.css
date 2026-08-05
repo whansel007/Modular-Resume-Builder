@@ -60,6 +60,31 @@
   display: flex;
 }
 
+/* Persistent marker for resume-scoped variant blocks */
+.variantBadge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  padding: 2px 7px;
+  background: var(--yellow);
+  border: 1.5px solid var(--ink);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+  line-height: 1.4;
+  pointer-events: auto;
+  cursor: help;
+}
+
+/* Slide clear of the edit/remove buttons when they appear on hover */
+.resumeBlock:hover .variantBadge {
+  right: 66px;
+}
+
 .iconBtn {
   background: var(--panel);
   border: 1.5px solid var(--ink);

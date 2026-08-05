@@ -1,7 +1,7 @@
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, onRemove, onEdit, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
+export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, isVariant = false, onRemove, onEdit, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
     e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
@@ -29,6 +29,15 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
+      {isVariant && (
+        <span
+          className={styles.variantBadge}
+          data-print-hide
+          title="Variant — this copy only applies to this resume"
+        >
+          Variant
+        </span>
+      )}
       <div className={styles.blockActions} data-print-hide>
         <button className={styles.iconBtn} onClick={onEdit} title="Edit">
           &#9998;

@@ -75,28 +75,45 @@
 }
 
 /* Animated ellipsis for long-running actions: ... → .. → . → ...
-   Fixed-width slot so the button label doesn't shift while animating. */
+   All three dots always occupy space — they blink off from the end via
+   opacity only, so the label stays perfectly centered through the cycle. */
 .dots {
   display: inline-block;
-  width: 3.5ch;
-  overflow: hidden;
-  vertical-align: bottom;
 }
 
-.dots::before {
-  content: '...';
+.dots span {
   display: inline-block;
-  white-space: nowrap;
-  text-align: left;
-  animation: dotsCycle 1.5s steps(3, end) infinite;
 }
 
-@keyframes dotsCycle {
-  0% {
-    width: 3.5ch;
+.dots span:nth-child(2) {
+  animation: dotsSecond 1.5s infinite;
+}
+
+.dots span:nth-child(3) {
+  animation: dotsThird 1.5s infinite;
+}
+
+/* Second dot visible for the first two thirds of the cycle */
+@keyframes dotsSecond {
+  0%,
+  66.66% {
+    opacity: 1;
   }
+  66.67%,
   100% {
-    width: 0;
+    opacity: 0;
+  }
+}
+
+/* Third dot visible only for the first third of the cycle */
+@keyframes dotsThird {
+  0%,
+  33.33% {
+    opacity: 1;
+  }
+  33.34%,
+  100% {
+    opacity: 0;
   }
 }
 

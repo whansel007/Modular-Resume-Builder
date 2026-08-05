@@ -414,6 +414,67 @@ export default function App() {
     }
   }, [editingBlockId, tempBlock, setBlocks, closeModal, user?.email]);
 
+  // Save the block being edited as a resume-scoped VARIANT: a copy with a
+  // new id, marked with this resume's id, swapped in for the original in
+  // this resume's sections only. The library block stays untouched, so no
+  // other resume is affected.
+  const saveBlockAsVariant = useCallback(async () => {
+    if (!editingBlockId) return;
+    const owner = user?.email || DEFAULT_OWNER;
+    const variantId = generateId();
+
+    // New resumes still carry the placeholder id 'r1' — give the resume a
+    // real id up front so the variant stays attached after the first save.
+    const resumeId =
+      resume._id || (resume.id && resume.id !== 'r1' ? resume.id : `r-${Date.now()}`);
+
+    const { jobTypeIds, type, ...contentFields } = tempBlock;
+    const blockData = {
+      ...contentFields,
+      id: variantId,
+      owner,
+      type,
+      jobTypeIds: jobTypeIds || [],
+      resumeId,
+      variantOf: editingBlockId,
+    };
+
+    try {
+      const res = await fetch('/api/blocks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeaders(),
+        },
+        body: JSON.stringify(blockData),
+      });
+
+      if (!res.ok) throw new Error('Failed to save block variant');
+
+      // Keep the original library block; add the variant alongside it.
+      setBlocks((prev) => [
+        ...prev,
+        { ...tempBlock, id: variantId, resumeId, variantOf: editingBlockId },
+      ]);
+
+      // Stabilize the resume id (matters for brand-new resumes) and swap the
+      // original block for the variant in every section of this resume.
+      setResume((prev) => {
+        const newSections = {};
+        for (const [key, ids] of Object.entries(prev.sections || {})) {
+          newSections[key] = (ids || []).map((id) => (id === editingBlockId ? variantId : id));
+        }
+        return { ...prev, id: resumeId, sections: newSections };
+      });
+
+      invalidatePrefetch('blocks');
+      closeModal();
+    } catch (err) {
+      console.error('Save block variant error:', err);
+      alert('Failed to save block variant to server');
+    }
+  }, [editingBlockId, tempBlock, resume, setBlocks, setResume, closeModal, user?.email]);
+
   const deleteBlock = useCallback(async (blockId) => {
     if (!confirm('Delete this block from the library? It will also be removed from any resume using it.')) return;
     
@@ -552,8 +613,10 @@ export default function App() {
     const owner = user?.email || DEFAULT_OWNER;
     setSaveStatus('saving');
 
-    // Generate new ID for new resumes (no _id means it's new)
-    const resumeId = resume._id || `r-${Date.now()}`;
+    // Generate new ID for new resumes (no _id means it's new).
+    // Reuse resume.id when it's already a real id so resume-scoped block
+    // variants (which reference resume.id) stay attached after the first save.
+    const resumeId = resume._id || (resume.id && resume.id !== 'r1' ? resume.id : `r-${Date.now()}`);
 
     try {
       const res = await fetch('/api/resumes', {
@@ -845,6 +908,7 @@ export default function App() {
           jobTypes={jobTypes}
           onAddCustomJobType={addCustomJobType}
           onSave={saveBlock}
+          onSaveVariant={saveBlockAsVariant}
           onClose={closeModal}
         />
       )}

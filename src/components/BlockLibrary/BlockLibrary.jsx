@@ -47,6 +47,9 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDeleteBl
 
   const filtered = useMemo(() => {
     return blocks.filter((b) => {
+      // Resume-scoped variants live only on their resume's canvas, never in
+      // the shared library.
+      if (b.resumeId) return false;
       const blockJobTypeIds = b.jobTypeIds || [];
       const matchesSearch =
         !searchQuery ||

@@ -9,11 +9,17 @@ export default function BlockModal({
   jobTypes, // Now an object: { jt1: "Software Development", ... }
   onAddCustomJobType,
   onSave,
+  onSaveVariant,
   onClose,
 }) {
   const [newJobTypeName, setNewJobTypeName] = useState('');
   const schema = BLOCK_SCHEMA[tempBlock.type];
   const jobTypeIds = tempBlock.jobTypeIds || [];
+  // A variant is resume-scoped: it only exists on one resume, never in the
+  // shared library. Offer "Save as Variant" only when editing a library
+  // block from inside the builder (onSaveVariant is passed there).
+  const isVariant = !!tempBlock.resumeId;
+  const canSaveAsVariant = !!editingBlockId && !!onSaveVariant && !isVariant;
 
   const handleTypeChange = (e) => {
     // Reset content fields when switching type, keep id/type/jobTypeIds
@@ -46,11 +52,20 @@ export default function BlockModal({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h3>{editingBlockId ? 'Edit Block' : 'New Block'}</h3>
+          <h3>
+            {editingBlockId ? (isVariant ? 'Edit Block Variant' : 'Edit Block') : 'New Block'}
+          </h3>
           <button className={styles.closeBtn} onClick={onClose}>
             &times;
           </button>
         </div>
+
+        {isVariant && (
+          <p className={styles.variantNote}>
+            This block is a variant — it belongs to this resume only. Changes here won't affect
+            the original block or any other resume.
+          </p>
+        )}
 
         <div className={styles.modalBody}>
           <div className={styles.field}>
@@ -122,8 +137,17 @@ export default function BlockModal({
 
         <div className={styles.modalFooter}>
           <button onClick={onClose}>Cancel</button>
+          {canSaveAsVariant && (
+            <button
+              className={styles.variantBtn}
+              onClick={onSaveVariant}
+              title="Save a copy of this block that only applies to the current resume"
+            >
+              Save as Variant
+            </button>
+          )}
           <button className={styles.primaryBtn} onClick={onSave}>
-            Save Block
+            {isVariant ? 'Save Variant' : 'Save Block'}
           </button>
         </div>
       </div>
