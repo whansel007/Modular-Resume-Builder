@@ -245,6 +245,11 @@
   border: 1.5px solid var(--ink);
   border-radius: 3px;
   padding: 2px 6px;
+  cursor: pointer;
+}
+
+.variantToggle:hover {
+  box-shadow: 2px 2px 0 var(--ink);
 }
 
 /* Dropdown listing the parent + its child variants */

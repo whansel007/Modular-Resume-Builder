@@ -225,12 +225,17 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
                     {active.name || `${schema.label} block`}
                   </h4>
                   {childVariants.length > 0 && (
-                    <span
+                    <button
+                      type="button"
                       className={styles.variantToggle}
-                      title="This block has child variants — click to pick one"
+                      title="Show this block's child variants"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setOpenDropdownId((prev) => (prev === block.id ? null : block.id));
+                      }}
                     >
-                      &#9662; {childVariants.length}
-                    </span>
+                      &#9662; {childVariants.length} {childVariants.length === 1 ? 'variant' : 'variants'}
+                    </button>
                   )}
                   <span className={styles.typeChip}>{schema.label}</span>
                 </div>
@@ -270,21 +275,29 @@ export default function BlockLibrary({ blocks, jobTypes, onEditBlock, onDuplicat
                   ))}
                 </div>
                 <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
-                  <button className={styles.small} onClick={() => onEditBlock(active.id)}>
-                    Edit
+                  <button
+                    className={styles.small}
+                    onClick={() => onEditBlock(active.id)}
+                    title="Edit block"
+                    aria-label="Edit block"
+                  >
+                    &#9998;
                   </button>
                   <button
                     className={styles.small}
                     onClick={() => onDuplicateBlock?.(active.id)}
                     title="Duplicate this block to build a similar one"
+                    aria-label="Duplicate block"
                   >
-                    Duplicate
+                    &#10697;
                   </button>
                   <button
                     className={`${styles.small} ${styles.danger}`}
                     onClick={() => onDeleteBlock(active.id)}
+                    title="Delete block"
+                    aria-label="Delete block"
                   >
-                    Delete
+                    &#128465;
                   </button>
                 </div>
               </div>
