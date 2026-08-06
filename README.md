@@ -16,6 +16,7 @@ A full-stack web application for building tailored resumes from a library of reu
 - **Template switching** — Choose between Modern and Classic resume templates
 - **Live preview** — See changes on the resume page as you build
 - **PDF export** — Print-optimized stylesheets produce clean A4 output via `window.print()`
+- **LinkedIn job import** — Companion Chrome extension copies a job description from LinkedIn or hands it straight to the builder for AI keyword extraction and auto-fill
 - **Editable resume title** — Rename resumes directly in the builder header
 - **Save to cloud** — Persist resumes and blocks to MongoDB with one click
 
@@ -93,6 +94,30 @@ npm run build
 npm run preview
 ```
 
+## Chrome Extension (optional)
+
+The `chrome-extension/` folder contains **Copy Job Description — Modular Resume Builder**, a Manifest V3 companion extension for LinkedIn. From any LinkedIn job posting it can either copy the job description to your clipboard, or deep-link into the Resume Builder, which then creates a fresh resume, pastes the JD, extracts keywords, and auto-fills — all automatically.
+
+### Loading the unpacked extension
+
+1. Open Chrome and go to `chrome://extensions`.
+2. Toggle **Developer mode** on (top-right corner).
+3. Click **Load unpacked**.
+4. Select the `chrome-extension` folder from this repository (the one containing `manifest.json`).
+5. The extension appears in your extension list — optionally click the puzzle-piece icon in the toolbar and pin it for quick access.
+
+> To update after changing extension files, press the **↻ reload** button on the extension's card at `chrome://extensions`.
+
+### Using it
+
+1. Open a job posting on LinkedIn (the description must be visible on the page).
+2. Click the extension icon to open its popup.
+3. Pick one of the two actions:
+   - **Copy JD** — copies the job description to your clipboard so you can paste it into the builder's Job Description panel yourself.
+   - **Open in Resume Builder** — opens the builder with a deep link; the app creates a new resume, imports the JD, extracts keywords, and auto-fills without any manual steps (log in if prompted — the import resumes automatically).
+
+> The deep link targets the deployed app by default (`BUILDER_ORIGIN` in `chrome-extension/popup.js`). To test against your local dev server, change it to `http://localhost:5173`.
+
 ## Project Structure
 
 ```
@@ -152,6 +177,10 @@ npm run preview
 │   └── utils/
 │       ├── id.js                     UUID generator
 │       └── constants.js              Block schemas, templates, job types
+├── chrome-extension/                 Companion Chrome extension (Manifest V3)
+│   ├── manifest.json                 Extension manifest (LinkedIn host permission)
+│   ├── popup.html / popup.js         Popup UI: Copy JD + Open in Resume Builder
+│   └── content.js / content.css      Extracts the JD from LinkedIn job pages
 └── dist/                             Production build output
 ```
 
