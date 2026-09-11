@@ -79,25 +79,6 @@ export default function ResumeCanvas({
     [onDropFromLibrary, onReorderInCanvas],
   );
 
-  const formatBody = (text) => {
-    return text
-      .split('\n')
-      .filter((line) => line.trim())
-      .map((line, i) => {
-        const parts = line.split(/(\*\*.*?\*\*)/g);
-        return (
-          <p key={i} style={{ margin: '0 0 2px 0' }}>
-            {parts.map((part, pIdx) => {
-              if (part.startsWith('**') && part.endsWith('**')) {
-                return <strong key={pIdx}>{part.slice(2, -2)}</strong>;
-              }
-              return part;
-            })}
-          </p>
-        );
-      });
-  };
-
   return (
     <main className={styles.panel}>
       <div className={styles.canvasHeader} data-print-hide>
@@ -190,7 +171,6 @@ export default function ResumeCanvas({
                       onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
                       onEdit={() => onEditBlock(blockId)}
                       onDuplicate={() => onDuplicateBlock?.(blockId, sectionTitle)}
-                      formatBody={formatBody}
                       onCanvasDragStart={onCanvasDragStart}
                       onCanvasDragEnd={onCanvasDragEnd}
                     />

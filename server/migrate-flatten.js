@@ -105,6 +105,15 @@ function mapTagNames(names, userTags) {
   return ids;
 }
 
+// Description is stored as an array of bullet strings; legacy newline strings
+// are split into arrays here so storage is uniform.
+function toDescriptionArray(v) {
+  if (v === undefined || v === null) return undefined;
+  if (Array.isArray(v)) return v.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+  if (typeof v === 'string') return v.split('\n').map((s) => s.trim()).filter(Boolean);
+  return v;
+}
+
 // Flatten one block doc to the canonical flat shape.
 function flattenBlock(b, userTags) {
   const out = { _id: b._id, owner: b.owner, type: b.type, name: b.name || '' };
@@ -135,6 +144,7 @@ function flattenBlock(b, userTags) {
   // Type aliases + project link relocation.
   if (out.type === 'cca') out.type = 'activities';
   moveProjectLink(out);
+  if (out.description !== undefined) out.description = toDescriptionArray(out.description);
   return out;
 }
 

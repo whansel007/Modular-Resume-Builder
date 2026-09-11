@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { BLOCK_SCHEMA, SECTION_TYPES } from '../../utils/constants';
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
+import BulletedBody, { isBulletType } from '../BulletedBody/BulletedBody';
 import styles from './BlockLibrary.module.css';
 
 export default function BlockLibrary({ blocks, tags, onNewBlock, onEditBlock, onDuplicateBlock, onDeleteBlock, onRemoveBlockFromResume = () => {}, isCanvasBlockDragging = false, onCanvasDragEnd }) {
@@ -120,7 +121,7 @@ export default function BlockLibrary({ blocks, tags, onNewBlock, onEditBlock, on
     e.currentTarget.classList.remove(styles.dragging);
   };
 
-  const isFilterActive = includedJobTypeIds.length > 0 || requiredJobTypeIds.length > 0;
+  const isFilterActive = includedTagIds.length > 0 || requiredTagIds.length > 0;
 
   return (
     <aside
@@ -271,7 +272,13 @@ export default function BlockLibrary({ blocks, tags, onNewBlock, onEditBlock, on
                     {rendered.subtitle ? (rendered.title ? ` · ${rendered.subtitle}` : rendered.subtitle) : ''}
                   </div>
                 )}
-                <div className={styles.preview}>{rendered.body || 'No additional details.'}</div>
+                <div className={styles.preview}>
+                  {rendered.body ? (
+                    <BulletedBody text={rendered.body} bullets={isBulletType(active.type)} />
+                  ) : (
+                    'No additional details.'
+                  )}
+                </div>
                 <div className={styles.tags}>
                   {blockTagIds.map((tagId) => (
                     <span key={tagId} className={styles.tag}>{tags[tagId] || tagId}</span>

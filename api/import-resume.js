@@ -7,8 +7,8 @@ Return ONLY valid JSON (no markdown, no commentary) matching:
   "blocks": [
     { "type": "summary", "name": "Summary", "fields": { "headline": "", "body": "" } },
     { "type": "experience", "name": "<Role> — <Company>", "fields": { "role": "", "company": "", "location": "", "startDate": "", "endDate": "", "description": "• bullet\\n• bullet" } },
-    { "type": "projects", "name": "<Role> — <Project/Org>", "fields": { "role": "", "company": "", "link": "", "location": "", "startDate": "", "endDate": "", "description": "• bullet\\n• bullet" } },
-    { "type": "activities", "name": "<Role> — <Organization/Initiative>", "fields": { "role": "", "company": "", "location": "", "startDate": "", "endDate": "", "description": "• bullet\\n• bullet" } },
+    { "type": "projects", "name": "<Project Name> — <Role>", "fields": { "company": "", "role": "", "link": "", "location": "", "startDate": "", "endDate": "", "description": "• bullet\\n• bullet" } },
+    { "type": "activities", "name": "<Role> — <Organization>", "fields": { "role": "", "company": "", "location": "", "startDate": "", "endDate": "", "description": "• bullet\\n• bullet" } },
     { "type": "education", "name": "<Degree> — <Institution>", "fields": { "institution": "", "degree": "", "field": "", "startDate": "", "endDate": "", "gpa": "" } },
     { "type": "skills", "name": "Skills", "fields": { "items": [ { "category": "Languages", "skills": "Python, TypeScript, SQL" }, { "category": "Frameworks", "skills": "React, Node.js" } ] } }
   ]
@@ -113,6 +113,28 @@ export default async function handler(req, res) {
                 category: items[0]?.category || b.fields.category || '',
                 skills: flatSkills,
                 items,
+              },
+            };
+          }
+          if (type === 'projects') {
+            let comp = (b.fields.company || '').trim();
+            let rl = (b.fields.role || '').trim();
+            const ROLE_KEYWORDS = /^(creator|maintainer|developer|lead|author|contributor|architect|engineer|founder|co-founder|designer|manager|owner|member|president|officer)\b/i;
+            if (ROLE_KEYWORDS.test(comp) && !ROLE_KEYWORDS.test(rl) && rl) {
+              const temp = comp;
+              comp = rl;
+              rl = temp;
+            } else if (!comp && rl) {
+              comp = rl;
+              rl = '';
+            }
+            return {
+              ...b,
+              type,
+              fields: {
+                ...b.fields,
+                company: comp,
+                role: rl,
               },
             };
           }

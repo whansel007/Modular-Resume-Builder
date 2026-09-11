@@ -10,12 +10,19 @@ export const SECTION_TYPES = [
   { key: 'skills', label: 'Skills' },
 ];
 
+// Description is stored as an array of bullet strings; legacy string values
+// (newline-separated) are joined the same way for display.
+export function concatDescription(desc) {
+  if (Array.isArray(desc)) return desc.join('\n');
+  return desc || '';
+}
+
 export const BLOCK_SCHEMA = {
   summary: {
     label: 'Summary',
     fields: [
-      { name: 'headline', label: 'Headline', type: 'text' },
-      { name: 'body', label: 'Summary', type: 'textarea' },
+      { name: 'headline', label: 'Headline', placeholder: 'e.g. Senior Software Engineer', type: 'text' },
+      { name: 'body', label: 'Summary', placeholder: 'Write a concise overview of your background, core strengths, and career focus...', type: 'textarea' },
     ],
     render: (b) => ({
       title: b.headline || 'Professional Summary',
@@ -25,39 +32,58 @@ export const BLOCK_SCHEMA = {
   experience: {
     label: 'Experience',
     fields: [
-      { name: 'company', label: 'Company', type: 'text' },
-      { name: 'role', label: 'Role', type: 'text' },
-      { name: 'location', label: 'Location', type: 'text' },
-      { name: 'startDate', label: 'Start Date', type: 'text' },
-      { name: 'endDate', label: 'End Date', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'company', label: 'Company', placeholder: 'e.g. Google or Stripe', type: 'text' },
+      { name: 'role', label: 'Role', placeholder: 'e.g. Senior Software Engineer', type: 'text' },
+      { name: 'location', label: 'Location', placeholder: 'e.g. San Francisco, CA or Remote', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. Jan 2021', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. Present or Dec 2023', type: 'text' },
+      { name: 'description', label: 'Description', placeholder: 'Key responsibilities, achievements, and impact...', type: 'textarea' },
     ],
     render: (b) => ({
       title: b.role || 'Role',
       subtitle: b.company || '',
       location: b.location || '',
       dates: `${b.startDate || ''}${b.startDate && b.endDate ? ' – ' : ''}${b.endDate || ''}`,
-      body: b.description || '',
+      body: concatDescription(b.description),
     }),
   },
   projects: {
     label: 'Projects',
     fields: [
-      { name: 'role', label: 'Role / Title', type: 'text' },
-      { name: 'company', label: 'Project / Organization', type: 'text' },
-      { name: 'link', label: 'Project Link / URL', type: 'text' },
-      { name: 'location', label: 'Location', type: 'text' },
-      { name: 'startDate', label: 'Start Date', type: 'text' },
-      { name: 'endDate', label: 'End Date', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'company', label: 'Project Name', placeholder: 'e.g. Open-Source Markdown Engine', type: 'text' },
+      { name: 'role', label: 'Role', placeholder: 'e.g. Creator & Maintainer', type: 'text' },
+      { name: 'link', label: 'Project Link', placeholder: 'e.g. https://github.com/username/project', type: 'text' },
+      { name: 'location', label: 'Location', placeholder: 'e.g. Remote or San Francisco, CA', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2022 or Jan 2022', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. Present or Dec 2023', type: 'text' },
+      { name: 'description', label: 'Description', placeholder: 'Describe your contributions, tech stack, and impact...', type: 'textarea' },
     ],
     render: (b) => {
-      let rawTitle = b.role || '';
+      let projectName = (b.company || '').trim();
+      let role = (b.role || '').trim();
+
+      // Check for markdown link syntax [Name](URL) in either field
       let extractedLink = '';
-      const mdMatch = typeof rawTitle === 'string' ? rawTitle.match(/^\[(.*?)\]\((.*?)\)$/) : null;
-      if (mdMatch) {
-        rawTitle = mdMatch[1];
-        extractedLink = mdMatch[2];
+      const mdMatchCompany = typeof projectName === 'string' ? projectName.match(/^\[(.*?)\]\((.*?)\)$/) : null;
+      if (mdMatchCompany) {
+        projectName = mdMatchCompany[1];
+        extractedLink = mdMatchCompany[2];
+      }
+      const mdMatchRole = typeof role === 'string' ? role.match(/^\[(.*?)\]\((.*?)\)$/) : null;
+      if (mdMatchRole) {
+        role = mdMatchRole[1];
+        if (!extractedLink) extractedLink = mdMatchRole[2];
+      }
+
+      // Role keyword check to handle inverted legacy data (where role was stored in company and project name in role)
+      const ROLE_KEYWORDS = /^(creator|maintainer|developer|lead|author|contributor|architect|engineer|founder|co-founder|designer|manager|owner|member|president|officer)\b/i;
+      if (ROLE_KEYWORDS.test(projectName) && !ROLE_KEYWORDS.test(role) && role) {
+        const temp = projectName;
+        projectName = role;
+        role = temp;
+      } else if (!projectName && role) {
+        projectName = role;
+        role = '';
       }
 
       const explicitLink = (b.link || b.url || b.headerUrl || extractedLink || '').trim();
@@ -69,61 +95,61 @@ export const BLOCK_SCHEMA = {
       const effectiveLink = explicitLink || (isLocationUrl ? b.location.trim() : '');
 
       return {
-        title: rawTitle || 'Project Name',
-        subtitle: b.company || '',
+        title: projectName || 'Project Name',
+        subtitle: role,
         location: b.location || '',
         link: effectiveLink,
         dates: `${b.startDate || ''}${b.startDate && b.endDate ? ' – ' : ''}${b.endDate || ''}`,
-        body: b.description || '',
+        body: concatDescription(b.description),
       };
     },
   },
   activities: {
     label: 'Activities',
     fields: [
-      { name: 'role', label: 'Role / Position', type: 'text' },
-      { name: 'company', label: 'Organization / Initiative', type: 'text' },
-      { name: 'location', label: 'Location', type: 'text' },
-      { name: 'startDate', label: 'Start Date', type: 'text' },
-      { name: 'endDate', label: 'End Date', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'role', label: 'Role', placeholder: 'e.g. President or Volunteer Lead', type: 'text' },
+      { name: 'company', label: 'Organization', placeholder: 'e.g. University Computing Society', type: 'text' },
+      { name: 'location', label: 'Location', placeholder: 'e.g. Campus Chapter or Boston, MA', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2021', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. 2023 or Present', type: 'text' },
+      { name: 'description', label: 'Description', placeholder: 'Leadership responsibilities, events organized, impact...', type: 'textarea' },
     ],
     render: (b) => ({
-      title: b.role || 'Position',
+      title: b.role || 'Role',
       subtitle: b.company || '',
       location: b.location || '',
       dates: `${b.startDate || ''}${b.startDate && b.endDate ? ' – ' : ''}${b.endDate || ''}`,
-      body: b.description || '',
+      body: concatDescription(b.description),
     }),
   },
   cca: {
     label: 'Activities',
     fields: [
-      { name: 'role', label: 'Role / Position', type: 'text' },
-      { name: 'company', label: 'Club / Organization', type: 'text' },
-      { name: 'location', label: 'Location', type: 'text' },
-      { name: 'startDate', label: 'Start Date', type: 'text' },
-      { name: 'endDate', label: 'End Date', type: 'text' },
-      { name: 'description', label: 'Description', type: 'textarea' },
+      { name: 'role', label: 'Role', placeholder: 'e.g. Captain or Committee Head', type: 'text' },
+      { name: 'company', label: 'Organization', placeholder: 'e.g. Varsity Debate Team', type: 'text' },
+      { name: 'location', label: 'Location', placeholder: 'e.g. Campus Chapter', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2021', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. 2023 or Present', type: 'text' },
+      { name: 'description', label: 'Description', placeholder: 'Key accomplishments, competitions, activities...', type: 'textarea' },
     ],
     render: (b) => ({
-      title: b.role || 'Position',
+      title: b.role || 'Role',
       subtitle: b.company || '',
       location: b.location || '',
       dates: `${b.startDate || ''}${b.startDate && b.endDate ? ' – ' : ''}${b.endDate || ''}`,
-      body: b.description || '',
+      body: concatDescription(b.description),
     }),
   },
   education: {
     label: 'Education',
     fields: [
-      { name: 'institution', label: 'Institution', type: 'text' },
-      { name: 'degree', label: 'Degree', type: 'text' },
-      { name: 'field', label: 'Field of Study', type: 'text' },
-      { name: 'location', label: 'Location', type: 'text' },
-      { name: 'startDate', label: 'Start Date', type: 'text' },
-      { name: 'endDate', label: 'End Date', type: 'text' },
-      { name: 'gpa', label: 'GPA / Honors', type: 'text' },
+      { name: 'institution', label: 'Institution', placeholder: 'e.g. State University', type: 'text' },
+      { name: 'degree', label: 'Degree', placeholder: 'e.g. Bachelor of Science', type: 'text' },
+      { name: 'field', label: 'Field of Study', placeholder: 'e.g. Computer Science', type: 'text' },
+      { name: 'location', label: 'Location', placeholder: 'e.g. Berkeley, CA', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2018', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. 2022', type: 'text' },
+      { name: 'gpa', label: 'GPA', placeholder: "e.g. 3.8 / 4.0 or Dean's List", type: 'text' },
     ],
     render: (b) => ({
       title: b.institution || 'Institution',
@@ -136,8 +162,8 @@ export const BLOCK_SCHEMA = {
   skills: {
     label: 'Skills',
     fields: [
-      { name: 'category', label: 'Category', type: 'text' },
-      { name: 'skills', label: 'Skills', type: 'textarea' },
+      { name: 'category', label: 'Category', placeholder: 'e.g. Languages & Frameworks', type: 'text' },
+      { name: 'skills', label: 'Skills', placeholder: 'e.g. JavaScript, React, Node.js, Python, SQL', type: 'textarea' },
     ],
     render: (b) => {
       let items = Array.isArray(b.items) ? b.items : [];

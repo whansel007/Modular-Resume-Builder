@@ -1,8 +1,9 @@
 import { DRAG_KEYS, DRAG_SOURCE } from '../../utils/dragKeys';
 import { formatContactUrl } from '../../utils/personalInfo';
+import BulletedBody, { isBulletType } from '../BulletedBody/BulletedBody';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, variantKind = null, onRemove, onEdit, onDuplicate, formatBody, onCanvasDragStart, onCanvasDragEnd }) {
+export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, variantKind = null, onRemove, onEdit, onDuplicate, onCanvasDragStart, onCanvasDragEnd }) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
     e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
@@ -122,7 +123,11 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
           {rendered.dates && <div className={styles.entryDates}>{rendered.dates}</div>}
         </div>
       )}
-      {rendered.body && <div className={styles.entryBody}>{formatBody(rendered.body)}</div>}
+      {rendered.body && (
+        <div className={styles.entryBody}>
+          <BulletedBody text={rendered.body} bullets={isBulletType(blockType)} />
+        </div>
+      )}
     </div>
   );
 }

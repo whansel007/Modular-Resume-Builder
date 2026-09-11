@@ -4,6 +4,16 @@ import { requireAuth } from '../lib/auth.js';
 
 const router = Router();
 
+// Description is stored as an array of bullet strings. Any source (textarea,
+// AI autoparse, import) that sends a string or a mixed array is normalized
+// here so storage is always a clean string[].
+function toDescriptionArray(v) {
+  if (v === undefined || v === null) return v;
+  if (Array.isArray(v)) return v.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+  if (typeof v === 'string') return v.split('\n').map((s) => s.trim()).filter(Boolean);
+  return v;
+}
+
 // GET all blocks (only for authenticated user)
 router.get('/', requireAuth, async (req, res) => {
   try {
@@ -33,6 +43,7 @@ router.post('/', requireAuth, async (req, res) => {
     if (name !== undefined) update.name = name || '';
     if (variantIn !== undefined) update.variantIn = variantIn || null;
     if (variantOf !== undefined) update.variantOf = variantOf || null;
+    if (update.description !== undefined) update.description = toDescriptionArray(update.description);
     const block = await Block.findByIdAndUpdate(
       id,
       update,
@@ -57,6 +68,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
       if (name !== undefined) update.name = name || '';
       if (variantIn !== undefined) update.variantIn = variantIn || null;
       if (variantOf !== undefined) update.variantOf = variantOf || null;
+      if (update.description !== undefined) update.description = toDescriptionArray(update.description);
       return {
         updateOne: {
           filter: { _id: id, owner: req.user.email },

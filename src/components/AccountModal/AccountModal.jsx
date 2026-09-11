@@ -324,7 +324,7 @@ export default function AccountModal({ userEmail, initial, onSave, onClose }) {
               </p>
 
               <label className={styles.modalInputLabel} htmlFor="acct-link-url-input">
-                URL / Web Address
+                Link URL
               </label>
               <input
                 id="acct-link-url-input"

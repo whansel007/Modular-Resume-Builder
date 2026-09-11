@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import BlockModal from '../components/BlockModal/BlockModal';
 import AccountModal from '../components/AccountModal/AccountModal';
 import ImportModal from '../components/ImportModal/ImportModal';
-import { BLOCK_SCHEMA, DEFAULT_OWNER, SECTION_TYPES } from '../utils/constants';
+import { BLOCK_SCHEMA, DEFAULT_OWNER, SECTION_TYPES, concatDescription } from '../utils/constants';
+import BulletedBody, { isBulletType } from '../components/BulletedBody/BulletedBody';
 import { normalizePersonalInfo } from '../utils/personalInfo';
 import { generateId } from '../utils/id';
 import { prefetchBuilderData, invalidatePrefetch, getOrFetch } from '../utils/prefetch';
@@ -658,7 +659,7 @@ export default function Dashboard() {
         metaParts.unshift(b.role);
       }
 
-      bodyText = b.description || b.body || '';
+      bodyText = concatDescription(b.description) || b.body || '';
     } else if (b.type === 'education') {
       if (b.institution && !isGeneric(b.institution)) metaParts.push(b.institution);
       const degreeStr = [b.degree, b.field].filter(Boolean).join(b.degree && b.field ? ' in ' : '');
@@ -666,7 +667,7 @@ export default function Dashboard() {
       if (b.location && !isGeneric(b.location)) metaParts.push(b.location);
       if (dates) metaParts.push(dates);
 
-      bodyText = [b.gpa, b.description || b.body].filter(Boolean).join(' · ');
+      bodyText = [b.gpa, concatDescription(b.description) || b.body].filter(Boolean).join(' · ');
     } else if (b.type === 'skills') {
       if (b.category && !isGeneric(b.category)) metaParts.push(b.category);
       if (Array.isArray(b.items) && b.items.length) {
@@ -681,7 +682,7 @@ export default function Dashboard() {
       if (b.headline && !isGeneric(b.headline) && b.headline.trim() !== (b.name || '').trim()) {
         metaParts.push(b.headline);
       }
-      bodyText = b.body || b.description || '';
+      bodyText = b.body || concatDescription(b.description) || '';
     } else {
       const schema = BLOCK_SCHEMA[b.type];
       if (schema?.render) {
@@ -949,9 +950,9 @@ export default function Dashboard() {
                         </p>
                       )}
                       {dt.body && (
-                        <p className={styles.cardPreview} title={dt.body}>
-                          {dt.body}
-                        </p>
+                        <div className={styles.cardPreview} title={dt.body}>
+                          <BulletedBody text={dt.body} bullets={isBulletType(block.type)} />
+                        </div>
                       )}
                     </div>
                     <p className={styles.cardTags}>

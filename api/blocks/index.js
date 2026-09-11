@@ -2,6 +2,15 @@ import { connectToDatabase } from '../../api-lib/db.js';
 import Block from '../../api-lib/models/Block.js';
 import { requireAuth } from '../../api-lib/auth.js';
 
+// Description is stored as an array of bullet strings; normalize any input
+// (textarea, AI autoparse, import) so storage is always a clean string[].
+function toDescriptionArray(v) {
+  if (v === undefined || v === null) return v;
+  if (Array.isArray(v)) return v.map((s) => (typeof s === 'string' ? s.trim() : '')).filter(Boolean);
+  if (typeof v === 'string') return v.split('\n').map((s) => s.trim()).filter(Boolean);
+  return v;
+}
+
 export default async function handler(req, res) {
   try {
     const user = requireAuth(req, res);
@@ -31,6 +40,7 @@ export default async function handler(req, res) {
       if (name !== undefined) update.name = name || '';
       if (variantIn !== undefined) update.variantIn = variantIn || null;
       if (variantOf !== undefined) update.variantOf = variantOf || null;
+      if (update.description !== undefined) update.description = toDescriptionArray(update.description);
       const block = await Block.findByIdAndUpdate(
         id,
         update,

@@ -281,6 +281,17 @@
   user-select: none;
 }
 
+.bulletLabel {
+  font-weight: 700;
+  color: var(--primary);
+  user-select: none;
+  padding-right: 2px;
+}
+
+.descriptionBuilder {
+  margin-bottom: 14px;
+}
+
 .skillInput {
   flex: 1;
 }

@@ -24,9 +24,9 @@ For "experience":
   "type": "experience",
   "name": "<Role> — <Company>",
   "fields": {
-    "role": "Role / Job Title",
-    "company": "Company / Organization Name",
-    "location": "City, State / Remote",
+    "role": "Role (e.g. Senior Software Engineer)",
+    "company": "Company (e.g. Google)",
+    "location": "City, State or Remote",
     "startDate": "Start Date",
     "endDate": "End Date",
     "description": "• Spearheaded ... resulting in 30% increase in ...\\n• Architected ... reducing latency by 45%\\n• Collaborated with ... delivering project 2 weeks ahead of schedule"
@@ -36,12 +36,12 @@ For "experience":
 For "projects":
 {
   "type": "projects",
-  "name": "<Role / Title> — <Project Name>",
+  "name": "<Project Name> — <Role>",
   "fields": {
-    "role": "Role / Title (e.g. Creator & Lead Developer)",
-    "company": "Project / Organization Name",
-    "link": "Project URL or Link (e.g. github.com/... or https://...)",
-    "location": "Location (e.g. Remote or City, State)",
+    "company": "Project Name (e.g. Open-Source Markdown Engine)",
+    "role": "Role (e.g. Creator & Maintainer)",
+    "link": "Project Link (e.g. https://github.com/username/project)",
+    "location": "Location (e.g. Remote)",
     "startDate": "Start Date",
     "endDate": "End Date",
     "description": "• Built and launched ... achieving 2,000+ active users\\n• Implemented ... cutting query execution time by 60%"
@@ -51,10 +51,10 @@ For "projects":
 For "activities":
 {
   "type": "activities",
-  "name": "<Role> — <Organization/Club>",
+  "name": "<Role> — <Organization>",
   "fields": {
-    "role": "Role / Position (e.g. President / Volunteer Lead)",
-    "company": "Club / Non-Profit / Community Organization",
+    "role": "Role (e.g. President)",
+    "company": "Organization (e.g. University Computing Society)",
     "location": "Location",
     "startDate": "Start Date",
     "endDate": "End Date",
@@ -77,13 +77,13 @@ For "education":
   "type": "education",
   "name": "<Degree> — <Institution>",
   "fields": {
-    "institution": "University / College / Institution",
+    "institution": "Institution (e.g. State University)",
     "degree": "Degree (e.g. B.S., M.S., B.A.)",
     "field": "Field of Study (e.g. Computer Science)",
     "location": "City, State",
     "startDate": "Start Date",
-    "endDate": "End Date / Graduation Year",
-    "gpa": "GPA: 3.8/4.0 · Honors / Relevant Coursework"
+    "endDate": "End Date",
+    "gpa": "GPA: 3.8 / 4.0 or Dean's List"
   }
 }
 

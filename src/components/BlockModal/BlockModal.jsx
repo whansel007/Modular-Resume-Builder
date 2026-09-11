@@ -17,6 +17,7 @@ export default function BlockModal({
 }) {
   const [newTagName, setNewTagName] = useState('');
   const [draggedSkillIdx, setDraggedSkillIdx] = useState(null);
+  const [draggedDescIdx, setDraggedDescIdx] = useState(null);
   const [autoParseOpen, setAutoParseOpen] = useState(false);
   const [autoParseText, setAutoParseText] = useState('');
   const [isAutoParsing, setIsAutoParsing] = useState(false);
@@ -249,6 +250,53 @@ export default function BlockModal({
     setTempBlock((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Description is stored as an array of bullet strings, edited one bullet per
+  // cell (mirrors the skills builder). Strings from legacy data are handled.
+  const getDescriptionItems = () => {
+    const d = tempBlock.description;
+    if (Array.isArray(d)) return d;
+    if (typeof d === 'string')
+      return d.split('\n').map((s) => s.trim()).filter(Boolean);
+    return [];
+  };
+
+  const updateDescriptionItem = (index, value) => {
+    const items = getDescriptionItems();
+    while (items.length <= index) items.push('');
+    items[index] = value;
+    setTempBlock((prev) => ({ ...prev, description: items }));
+  };
+
+  const addDescriptionItem = () => {
+    setTempBlock((prev) => ({ ...prev, description: [...getDescriptionItems(), ''] }));
+  };
+
+  const removeDescriptionItem = (index) => {
+    const items = getDescriptionItems();
+    const next = items.filter((_, i) => i !== index);
+    setTempBlock((prev) => ({ ...prev, description: next.length ? next : [''] }));
+  };
+
+  const handleDescDragStart = (e, index) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+    setDraggedDescIdx(index);
+  };
+
+  const handleDescDrop = (e, targetIndex) => {
+    e.preventDefault();
+    if (draggedDescIdx === null || draggedDescIdx === targetIndex) return;
+    const items = getDescriptionItems();
+    const [moved] = items.splice(draggedDescIdx, 1);
+    items.splice(targetIndex, 0, moved);
+    setTempBlock((prev) => ({ ...prev, description: items }));
+    setDraggedDescIdx(null);
+  };
+
+  // Show at least one editable cell so a fresh block isn't a dead list.
+  const descItems = getDescriptionItems();
+  const visibleDescItems = descItems.length ? descItems : [''];
+
   const toggleTag = (tagId) => {
     setTempBlock((prev) => {
       const ids = prev.tagIds || [];
@@ -403,8 +451,52 @@ export default function BlockModal({
                     </a>
                   )}
                 </div>
-                {field.type === 'textarea' ? (
+                {field.name === 'description' ? (
+                  <div className={styles.descriptionBuilder}>
+                    <div className={styles.skillsList}>
+                      {visibleDescItems.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className={`${styles.skillRow} ${draggedDescIdx === idx ? styles.skillRowDragging : ''}`}
+                          draggable
+                          onDragStart={(e) => handleDescDragStart(e, idx)}
+                          onDragOver={handleSkillDragOver}
+                          onDrop={(e) => handleDescDrop(e, idx)}
+                          onDragEnd={handleSkillDragEnd}
+                        >
+                          <span className={styles.dragHandle} title="Drag to reorder">
+                            &#9776;
+                          </span>
+                          <span className={styles.bulletLabel}>•</span>
+                          <input
+                            type="text"
+                            className={styles.skillInput}
+                            placeholder="Accomplishment, detail, or result…"
+                            value={item}
+                            onChange={(e) => updateDescriptionItem(idx, e.target.value)}
+                          />
+                          <button
+                            type="button"
+                            className={styles.removeSkillBtn}
+                            onClick={() => removeDescriptionItem(idx)}
+                            title="Remove bullet point"
+                            disabled={descItems.length <= 1 && !item}
+                          >
+                            &times;
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <button type="button" className={styles.addSkillBtn} onClick={addDescriptionItem}>
+                      + Add Bullet Point
+                    </button>
+                    <span className={styles.nameHint}>
+                      One bullet point per cell — each becomes a • bullet point on the canvas and exported PDF.
+                    </span>
+                  </div>
+                ) : field.type === 'textarea' ? (
                   <textarea
+                    placeholder={field.placeholder || ''}
                     value={tempBlock[field.name] || ''}
                     onChange={(e) => handleFieldChange(field.name, e.target.value)}
                   />
@@ -532,7 +624,7 @@ export default function BlockModal({
 
                 <div className={styles.autoParseField}>
                   <div className={styles.autoParseLabelRow}>
-                    <label>What did you work on / go through?</label>
+                    <label>What did you work on?</label>
                     <button
                       type="button"
                       className={`${styles.micBtn} ${isRecording ? styles.micBtnActive : ''}`}
@@ -560,7 +652,7 @@ export default function BlockModal({
                           </svg>
                         )}
                       </span>
-                      <span>{isRecording ? 'Listening (Click to Stop)' : '🎙️ Talk / Voice Dictate'}</span>
+                      <span>{isRecording ? 'Listening (Click to Stop)' : '🎙️ Voice Dictate'}</span>
                       <span className={styles.modelPill}>Whisper AI</span>
                     </button>
                   </div>
