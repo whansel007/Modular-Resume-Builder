@@ -723,8 +723,20 @@ export default function App() {
   }, [setResume]);
 
   const updateSectionTitle = useCallback((oldTitle, newTitle, sectionIdx) => {
+  const updateSectionTitle = useCallback((oldTitle, newTitle, sectionIdx) => {
     if (oldTitle === newTitle) return;
     setResume((prev) => {
+      const order = [...(prev.sectionOrder || [])];
+      const targetIdx = typeof sectionIdx === 'number' ? sectionIdx : order.indexOf(oldTitle);
+      const actualOldTitle = targetIdx >= 0 && order[targetIdx] !== undefined ? order[targetIdx] : oldTitle;
+
+      if (targetIdx >= 0 && targetIdx < order.length) {
+        order[targetIdx] = newTitle;
+      } else {
+        const idx = order.indexOf(oldTitle);
+        if (idx >= 0) order[idx] = newTitle;
+      }
+
       const order = [...(prev.sectionOrder || [])];
       const targetIdx = typeof sectionIdx === 'number' ? sectionIdx : order.indexOf(oldTitle);
       const actualOldTitle = targetIdx >= 0 && order[targetIdx] !== undefined ? order[targetIdx] : oldTitle;
@@ -752,7 +764,9 @@ export default function App() {
       return {
         ...prev,
         sectionOrder: order,
+        sectionOrder: order,
         sections: newSections,
+        hiddenSections: (prev.hiddenSections || []).map((t) => (t === actualOldTitle ? newTitle : t)),
         hiddenSections: (prev.hiddenSections || []).map((t) => (t === actualOldTitle ? newTitle : t)),
       };
     });
