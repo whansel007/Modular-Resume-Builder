@@ -242,7 +242,7 @@ export default function PropertiesPanel({
 
                 return (
                   <div
-                    key={title || idx}
+                    key={`sec-${idx}`}
                     className={`
                       ${styles.sectionItemCard}
                       ${draggedSecIdx === idx ? styles.dragging : ''}
