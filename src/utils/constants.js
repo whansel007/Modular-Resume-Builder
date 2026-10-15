@@ -4,10 +4,10 @@ export const DEFAULT_OWNER = 'kit@catship.nya';
 export const SECTION_TYPES = [
   { key: 'summary', label: 'Summary' },
   { key: 'experience', label: 'Experience' },
-  { key: 'projects', label: 'Projects' },
-  { key: 'activities', label: 'Activities' },
+  { key: 'projects', label: 'Projects Experience' },
+  { key: 'activities', label: 'Co-Curricular Activities' },
   { key: 'education', label: 'Education' },
-  { key: 'skills', label: 'Skills' },
+  { key: 'skills', label: 'Skills and Interest' },
 ];
 
 // Description is stored as an array of bullet strings; legacy string values
@@ -48,13 +48,13 @@ export const BLOCK_SCHEMA = {
     }),
   },
   projects: {
-    label: 'Projects',
+    label: 'Projects Experience',
     fields: [
       { name: 'company', label: 'Project Name', placeholder: 'e.g. Open-Source Markdown Engine', type: 'text' },
       { name: 'role', label: 'Role', placeholder: 'e.g. Creator & Maintainer', type: 'text' },
       { name: 'link', label: 'Project Link', placeholder: 'e.g. https://github.com/username/project', type: 'text' },
       { name: 'location', label: 'Location', placeholder: 'e.g. Remote or San Francisco, CA', type: 'text' },
-      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2022 or Jan 2022', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. Jan 2022', type: 'text' },
       { name: 'endDate', label: 'End Date', placeholder: 'e.g. Present or Dec 2023', type: 'text' },
       { name: 'description', label: 'Description', placeholder: 'Describe your contributions, tech stack, and impact...', type: 'textarea' },
     ],
@@ -105,13 +105,13 @@ export const BLOCK_SCHEMA = {
     },
   },
   activities: {
-    label: 'Activities',
+    label: 'Co-Curricular Activities',
     fields: [
       { name: 'role', label: 'Role', placeholder: 'e.g. President or Volunteer Lead', type: 'text' },
       { name: 'company', label: 'Organization', placeholder: 'e.g. University Computing Society', type: 'text' },
       { name: 'location', label: 'Location', placeholder: 'e.g. Campus Chapter or Boston, MA', type: 'text' },
-      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2021', type: 'text' },
-      { name: 'endDate', label: 'End Date', placeholder: 'e.g. 2023 or Present', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. Jan 2021', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. Present or Dec 2023', type: 'text' },
       { name: 'description', label: 'Description', placeholder: 'Leadership responsibilities, events organized, impact...', type: 'textarea' },
     ],
     render: (b) => ({
@@ -123,13 +123,13 @@ export const BLOCK_SCHEMA = {
     }),
   },
   cca: {
-    label: 'Activities',
+    label: 'Co-Curricular Activities',
     fields: [
       { name: 'role', label: 'Role', placeholder: 'e.g. Captain or Committee Head', type: 'text' },
       { name: 'company', label: 'Organization', placeholder: 'e.g. Varsity Debate Team', type: 'text' },
       { name: 'location', label: 'Location', placeholder: 'e.g. Campus Chapter', type: 'text' },
-      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2021', type: 'text' },
-      { name: 'endDate', label: 'End Date', placeholder: 'e.g. 2023 or Present', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. Jan 2021', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. Present or Dec 2023', type: 'text' },
       { name: 'description', label: 'Description', placeholder: 'Key accomplishments, competitions, activities...', type: 'textarea' },
     ],
     render: (b) => ({
@@ -147,8 +147,8 @@ export const BLOCK_SCHEMA = {
       { name: 'degree', label: 'Degree', placeholder: 'e.g. Bachelor of Science', type: 'text' },
       { name: 'field', label: 'Field of Study', placeholder: 'e.g. Computer Science', type: 'text' },
       { name: 'location', label: 'Location', placeholder: 'e.g. Berkeley, CA', type: 'text' },
-      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. 2018', type: 'text' },
-      { name: 'endDate', label: 'End Date', placeholder: 'e.g. 2022', type: 'text' },
+      { name: 'startDate', label: 'Start Date', placeholder: 'e.g. Aug 2018', type: 'text' },
+      { name: 'endDate', label: 'End Date', placeholder: 'e.g. May 2022', type: 'text' },
       { name: 'gpa', label: 'GPA', placeholder: "e.g. 3.8 / 4.0 or Dean's List", type: 'text' },
     ],
     render: (b) => ({
@@ -160,7 +160,7 @@ export const BLOCK_SCHEMA = {
     }),
   },
   skills: {
-    label: 'Skills',
+    label: 'Skills and Interest',
     fields: [
       { name: 'category', label: 'Category', placeholder: 'e.g. Languages & Frameworks', type: 'text' },
       { name: 'skills', label: 'Skills', placeholder: 'e.g. JavaScript, React, Node.js, Python, SQL', type: 'textarea' },
@@ -235,7 +235,7 @@ export const INITIAL_BLOCKS = [
     company: 'TechCorp',
     role: 'Senior Software Engineer',
     location: 'San Francisco, CA',
-    startDate: '2020',
+    startDate: 'Jan 2020',
     endDate: 'Present',
     description: 'Lead backend architecture for a high-traffic SaaS platform. Mentor junior engineers and drive CI/CD best practices.',
   },
@@ -247,8 +247,8 @@ export const INITIAL_BLOCKS = [
     company: 'StartupXYZ',
     role: 'Engineering Manager',
     location: 'Remote',
-    startDate: '2017',
-    endDate: '2020',
+    startDate: 'Mar 2017',
+    endDate: 'Dec 2020',
     description: 'Managed a team of 10 engineers across two product squads. Improved delivery predictability by 40%.',
   },
   {
@@ -259,8 +259,8 @@ export const INITIAL_BLOCKS = [
     institution: 'State University',
     degree: 'Bachelor of Science',
     field: 'Computer Science',
-    startDate: '2012',
-    endDate: '2016',
+    startDate: 'Aug 2012',
+    endDate: 'May 2016',
     gpa: 'GPA: 3.8 / 4.0',
   },
   {
@@ -283,7 +283,7 @@ export const INITIAL_BLOCKS = [
     company: 'Open-Source Markdown Engine',
     link: 'https://github.com/example/engine',
     location: '',
-    startDate: '2022',
+    startDate: 'Jan 2022',
     endDate: 'Present',
     description: 'Built a high-performance streaming markdown parser in TypeScript with 2,000+ GitHub stars.',
   },
@@ -295,8 +295,8 @@ export const INITIAL_BLOCKS = [
     role: 'President',
     company: 'University Computing Society',
     location: 'Campus Chapter',
-    startDate: '2014',
-    endDate: '2016',
+    startDate: 'Sep 2014',
+    endDate: 'May 2016',
     description: 'Organized annual 48-hour national hackathon with 400+ participants and raised $25k in industry sponsorships.',
   },
 ];
@@ -327,6 +327,7 @@ export const INITIAL_RESUME = {
     Skills: ['b5'],
   },
   hiddenSections: [],
+  showLocations: false,
 };
 
 export const BLANK_RESUME = {
@@ -348,6 +349,7 @@ export const BLANK_RESUME = {
   sectionOrder: [],
   sections: {},
   hiddenSections: [],
+  showLocations: false,
 };
 
 export const BLANK_BLOCKS = [];
@@ -355,10 +357,10 @@ export const BLANK_BLOCKS = [];
 export const SECTION_NAME_SUGGESTIONS = [
   'Summary',
   'Experience',
-  'Projects',
-  'Activities',
+  'Projects Experience',
+  'Co-Curricular Activities',
   'Education',
-  'Skills',
+  'Skills and Interest',
   'Certifications',
   'Awards',
 ];

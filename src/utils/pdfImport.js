@@ -31,10 +31,10 @@ const SECTION_PATTERNS = [
   { type: 'summary', re: /^(professional\s+)?(summary|profile|objective|about(\s+me)?|personal\s+statement)$/i },
   { type: 'experience', re: /^((work|professional|employment|relevant)\s+)?(experience|history)$/i },
   { type: 'experience', re: /^employment$/i },
-  { type: 'projects', re: /^(projects|personal\s+projects|academic\s+projects|key\s+projects|technical\s+projects)$/i },
+  { type: 'projects', re: /^(projects|personal\s+projects|academic\s+projects|key\s+projects|technical\s+projects|projects?\s+experience)$/i },
   { type: 'activities', re: /^(co-curricular\s+activities|extracurricular\s+activities|co-curriculars|extracurriculars|activities|activity|volunteering|volunteer\s+experience|community\s+service|leadership(\s+experience)?|involvement|organizations|affiliations|cca)$/i },
   { type: 'education', re: /^(education(al)?(\s+history)?|academics?)$/i },
-  { type: 'skills', re: /^((technical|core|key|relevant)\s+)?(skills|competenc(y|ies)|technologies|tools)(\s+&\s+interests)?$/i },
+  { type: 'skills', re: /^((technical|core|key|relevant)\s+)?(skills|competenc(y|ies)|technologies|tools)(\s*(and|&)\s*interests?)?$/i },
 ];
 
 function matchSectionType(title) {

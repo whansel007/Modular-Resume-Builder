@@ -244,7 +244,7 @@ export default function App() {
         const found = resumes.find((r) => r._id === resumeId);
         if (found) {
           // Flatten personalInfo if needed and set resume
-          setResume({ ...found, id: found._id, hiddenSections: found.hiddenSections || [] });
+          setResume({ ...found, id: found._id, hiddenSections: found.hiddenSections || [], showLocations: !!found.showLocations });
         }
       })
       .catch((err) => console.error('Failed to fetch resume:', err));
@@ -662,6 +662,13 @@ export default function App() {
     setResume((prev) => ({ ...prev, templateId }));
   }, [setResume]);
 
+  const toggleShowLocations = useCallback((showLocations) => {
+    setResume((prev) => ({
+      ...prev,
+      showLocations: typeof showLocations === 'boolean' ? showLocations : !prev.showLocations,
+    }));
+  }, [setResume]);
+
   const updatePersonalInfoField = useCallback((fieldOrObject, value) => {
     setResume((prev) => {
       let nextInfo;
@@ -800,6 +807,7 @@ export default function App() {
           sectionOrder: resume.sectionOrder,
           sections: resume.sections,
           hiddenSections: resume.hiddenSections || [],
+          showLocations: !!resume.showLocations,
         }),
       });
 
@@ -1056,6 +1064,7 @@ export default function App() {
                 resume={resume}
                 personalInfo={personalInfo}
                 onSetTemplate={setTemplate}
+                onToggleShowLocations={toggleShowLocations}
                 onUpdatePersonalInfo={updatePersonalInfoField}
                 onSaveDefaultPersonalInfo={saveDefaultPersonalInfo}
                 saveDefaultStatus={saveDefaultStatus}

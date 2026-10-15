@@ -32,6 +32,7 @@ A full-stack web application for building tailored resumes from a library of reu
 
 ### Backend & Authentication
 - **User authentication** — Register and login with bcrypt password hashing + JWT tokens
+- **Password reset & change** — Reset a forgotten password or confirm a password change with a 6-digit code emailed to the account (Resend)
 - **MongoDB persistence** — All data stored in MongoDB Atlas (cloud) or local MongoDB
 - **Multi-user support** — Each user has their own resumes, blocks, and job types
 - **Owner-scoped data** — Resumes and blocks are scoped to the logged-in user's email
@@ -75,6 +76,11 @@ JWT_SECRET=your_jwt_secret_key
 # Optional — resolvers Node uses for mongodb+srv SRV lookups. Override if the
 # default resolvers are unreachable on your network. Defaults to 223.5.5.5,119.29.29.29.
 DNS_SERVERS=
+
+# Optional — enables password reset / change confirmation emails (6-digit code).
+# Get a key from https://resend.com/. Without it, codes are logged to the console.
+RESEND_API_KEY=
+EMAIL_FROM=Modular Resume Builder <onboarding@resend.dev>
 ```
 
 > MongoDB Atlas `mongodb+srv://` URIs require an SRV DNS lookup. If Node reports
@@ -311,6 +317,8 @@ The `api/` directory contains serverless functions that Vercel automatically dep
 Set these in your Vercel project settings:
 - `MONGODB_URI` — MongoDB Atlas connection string
 - `JWT_SECRET` — Secret key for JWT signing
+- `RESEND_API_KEY` — (optional) Resend API key for password reset/change emails
+- `EMAIL_FROM` — (optional) verified "from" address for outgoing emails
 
 ## Block Types
 

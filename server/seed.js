@@ -44,7 +44,7 @@ const blocks = [
     company: 'TechCorp',
     role: 'Senior Software Engineer',
     location: 'San Francisco, CA',
-    startDate: '2020',
+    startDate: 'Jan 2020',
     endDate: 'Present',
     description: 'Lead backend architecture for a high-traffic SaaS platform. Mentor junior engineers and drive CI/CD best practices.',
   },
@@ -56,8 +56,8 @@ const blocks = [
     company: 'StartupXYZ',
     role: 'Engineering Manager',
     location: 'Remote',
-    startDate: '2017',
-    endDate: '2020',
+    startDate: 'Mar 2017',
+    endDate: 'Dec 2020',
     description: 'Managed a team of 10 engineers across two product squads. Improved delivery predictability by 40%.',
   },
   {
@@ -68,8 +68,8 @@ const blocks = [
     institution: 'State University',
     degree: 'Bachelor of Science',
     field: 'Computer Science',
-    startDate: '2012',
-    endDate: '2016',
+    startDate: 'Aug 2012',
+    endDate: 'May 2016',
     gpa: 'GPA: 3.8 / 4.0',
   },
   {
@@ -93,7 +93,7 @@ const blocks = [
     role: 'Creator & Maintainer',
     company: 'Open-Source Markdown Engine',
     location: 'github.com/example/engine',
-    startDate: '2022',
+    startDate: 'Jan 2022',
     endDate: 'Present',
     description: 'Built a high-performance streaming markdown parser in TypeScript with 2,000+ GitHub stars.',
   },
@@ -105,8 +105,8 @@ const blocks = [
     role: 'President',
     company: 'University Computing Society',
     location: 'Campus Chapter',
-    startDate: '2014',
-    endDate: '2016',
+    startDate: 'Sep 2014',
+    endDate: 'May 2016',
     description: 'Organized annual 48-hour national hackathon with 400+ participants and raised $25k in industry sponsorships.',
   },
 ];
@@ -135,6 +135,7 @@ const resume = {
     Education: ['b4'],
     Skills: ['b5'],
   },
+  showLocations: false,
 };
 
 // ── Seed ──────────────────────────────────────────────────────────────────────

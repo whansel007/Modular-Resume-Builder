@@ -5,11 +5,21 @@ import styles from './AccountModal.module.css';
 // Account details modal (opened by clicking the email in the Dashboard
 // header). Edits the user's DEFAULT personal info, which prefills the
 // personal-info fields of every new resume in the preserved order.
-export default function AccountModal({ userEmail, initial, onSave, onClose }) {
+export default function AccountModal({ userEmail, initial, onSave, onRequestPasswordCode, onConfirmPassword, onDeleteAccount, onClose }) {
   const [form, setForm] = useState(() => normalizePersonalInfo(initial));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+  const [pw, setPw] = useState({ code: '', newPassword: '', confirmPassword: '' });
+  const [pwSending, setPwSending] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSent, setPwSent] = useState(false);
+  const [pwError, setPwError] = useState('');
+  const [pwSuccess, setPwSuccess] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const fields = form.fields || [];
 
@@ -142,6 +152,64 @@ export default function AccountModal({ userEmail, initial, onSave, onClose }) {
       setError(err.message || 'Failed to save account details');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSendCode = async () => {
+    setPwError('');
+    setPwSuccess(false);
+    setPwSending(true);
+    try {
+      await onRequestPasswordCode();
+      setPwSent(true);
+    } catch (err) {
+      setPwError(err.message || 'Failed to send confirmation email');
+    } finally {
+      setPwSending(false);
+    }
+  };
+
+  const handleConfirmPassword = async () => {
+    setPwError('');
+    setPwSuccess(false);
+    if (!pw.code || !pw.newPassword || !pw.confirmPassword) {
+      setPwError('Fill in the code and new password');
+      return;
+    }
+    if (pw.newPassword.length < 8) {
+      setPwError('New password must be at least 8 characters long');
+      return;
+    }
+    if (pw.newPassword !== pw.confirmPassword) {
+      setPwError('New passwords do not match');
+      return;
+    }
+    setPwSaving(true);
+    try {
+      await onConfirmPassword({ code: pw.code, newPassword: pw.newPassword });
+      setPw({ code: '', newPassword: '', confirmPassword: '' });
+      setPwSent(false);
+      setPwSuccess(true);
+      setTimeout(() => setPwSuccess(false), 3000);
+    } catch (err) {
+      setPwError(err.message || 'Failed to change password');
+    } finally {
+      setPwSaving(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError('');
+    if (!deletePassword) {
+      setDeleteError('Enter your password to confirm');
+      return;
+    }
+    setDeleting(true);
+    try {
+      await onDeleteAccount(deletePassword);
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete account');
+      setDeleting(false);
     }
   };
 
@@ -278,6 +346,93 @@ export default function AccountModal({ userEmail, initial, onSave, onClose }) {
             )}
           </div>
 
+          <div className={styles.securitySection}>
+            <label className={styles.subLabel}>Change Password</label>
+            <p className={styles.dangerHint}>
+              We&rsquo;ll email a 6-digit code to <strong>{userEmail}</strong> to confirm the change.
+            </p>
+            <div className={styles.securityFields}>
+              {!pwSent && (
+                <button
+                  type="button"
+                  className={styles.pwBtn}
+                  onClick={handleSendCode}
+                  disabled={pwSending}
+                >
+                  {pwSending ? 'Sending...' : 'Email me a confirmation code'}
+                </button>
+              )}
+
+              {pwSent && (
+                <>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={styles.modalInput}
+                    placeholder="6-digit code"
+                    value={pw.code}
+                    onChange={(e) => setPw((prev) => ({ ...prev, code: e.target.value }))}
+                  />
+                  <input
+                    type="password"
+                    className={styles.modalInput}
+                    placeholder="New password (min 8 characters)"
+                    value={pw.newPassword}
+                    onChange={(e) => setPw((prev) => ({ ...prev, newPassword: e.target.value }))}
+                    autoComplete="new-password"
+                  />
+                  <input
+                    type="password"
+                    className={styles.modalInput}
+                    placeholder="Confirm new password"
+                    value={pw.confirmPassword}
+                    onChange={(e) => setPw((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                    autoComplete="new-password"
+                  />
+                  <div className={styles.pwActions}>
+                    <button
+                      type="button"
+                      className={styles.pwBtn}
+                      onClick={handleConfirmPassword}
+                      disabled={pwSaving}
+                    >
+                      {pwSaving ? 'Updating...' : 'Confirm change'}
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.pwLinkBtn}
+                      onClick={handleSendCode}
+                      disabled={pwSending}
+                    >
+                      Resend code
+                    </button>
+                  </div>
+                </>
+              )}
+
+              {pwError && <p className={styles.error}>{pwError}</p>}
+              {pwSuccess && <p className={styles.success}>Password updated.</p>}
+            </div>
+          </div>
+
+          <div className={styles.dangerSection}>
+            <label className={styles.subLabel}>Danger Zone</label>
+            <p className={styles.dangerHint}>
+              Deleting your account permanently removes your resumes and block library.
+            </p>
+            <button
+              type="button"
+              className={styles.dangerBtn}
+              onClick={() => {
+                setDeleteError('');
+                setDeletePassword('');
+                setDeleteOpen(true);
+              }}
+            >
+              Delete Account
+            </button>
+          </div>
+
           {error && <p className={styles.error}>{error}</p>}
           {saved && <p className={styles.success}>Saved — new resumes will use these details.</p>}
         </div>
@@ -370,6 +525,83 @@ export default function AccountModal({ userEmail, initial, onSave, onClose }) {
                   onClick={handleSaveLink}
                 >
                   {fields[linkModalIdx]?.url ? 'Update Link' : 'Attach Link'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {deleteOpen && (
+        <div
+          className={styles.linkModalOverlay}
+          onClick={() => !deleting && setDeleteOpen(false)}
+          data-print-hide
+        >
+          <div className={styles.linkModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.linkModalHeader}>
+              <div className={styles.linkModalHeaderTitle}>
+                <h3>Delete Account</h3>
+              </div>
+              <button
+                type="button"
+                className={styles.modalCloseBtn}
+                onClick={() => !deleting && setDeleteOpen(false)}
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="3" y1="3" x2="13" y2="13" />
+                  <line x1="13" y1="3" x2="3" y2="13" />
+                </svg>
+              </button>
+            </div>
+
+            <div className={styles.linkModalBody}>
+              <p className={styles.linkTargetDesc}>
+                This permanently deletes <strong>{userEmail}</strong> and all of its resumes and
+                blocks. This cannot be undone.
+              </p>
+
+              <label className={styles.modalInputLabel} htmlFor="acct-delete-password">
+                Confirm your password
+              </label>
+              <input
+                id="acct-delete-password"
+                className={styles.modalInput}
+                type="password"
+                placeholder="Your password"
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleDeleteAccount();
+                  }
+                }}
+                autoComplete="current-password"
+                autoFocus
+              />
+              {deleteError && <p className={styles.error}>{deleteError}</p>}
+            </div>
+
+            <div className={styles.linkModalFooter}>
+              <div />
+              <div className={styles.linkModalFooterRight}>
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => setDeleteOpen(false)}
+                  disabled={deleting}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className={styles.dangerBtn}
+                  onClick={handleDeleteAccount}
+                  disabled={deleting}
+                >
+                  {deleting ? 'Deleting...' : 'Delete Account'}
                 </button>
               </div>
             </div>

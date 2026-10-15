@@ -3,7 +3,20 @@ import { formatContactUrl } from '../../utils/personalInfo';
 import BulletedBody, { isBulletType } from '../BulletedBody/BulletedBody';
 import styles from './ResumeBlock.module.css';
 
-export default function ResumeBlock({ blockId, blockType, sectionId, index, rendered, variantKind = null, onRemove, onEdit, onDuplicate, onCanvasDragStart, onCanvasDragEnd }) {
+export default function ResumeBlock({
+  blockId,
+  blockType,
+  sectionId,
+  index,
+  rendered,
+  showLocations = false,
+  variantKind = null,
+  onRemove,
+  onEdit,
+  onDuplicate,
+  onCanvasDragStart,
+  onCanvasDragEnd,
+}) {
   const handleDragStart = (e) => {
     e.dataTransfer.setData(DRAG_KEYS.BLOCK_ID, blockId);
     e.dataTransfer.setData(DRAG_KEYS.SOURCE, DRAG_SOURCE.CANVAS);
@@ -23,6 +36,10 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
     /^https?:\/\//i.test(rendered.location.trim()) ||
     /^(www\.)?(github\.com|linkedin\.com|gitlab\.com)/i.test(rendered.location.trim())
   );
+
+  const hasTopRight = showLocations ? !!rendered.location : !!rendered.dates;
+  const hasBottomRight = showLocations && !!rendered.dates;
+  const topRightText = showLocations ? rendered.location : (rendered.dates || '');
 
   return (
     <div
@@ -64,8 +81,8 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
           &times;
         </button>
       </div>
-      {(rendered.title || rendered.location) && (
-        <div className={`${styles.entryHeader} ${rendered.link || isLocationUrl ? styles.entryHeaderLinked : ''}`}>
+      {(rendered.title || hasTopRight) && (
+        <div className={`${styles.entryHeader} ${rendered.link || (showLocations && isLocationUrl) ? styles.entryHeaderLinked : ''}`}>
           {rendered.title && (
             <div className={styles.entryTitle}>
               {rendered.link ? (
@@ -99,9 +116,9 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
               )}
             </div>
           )}
-          {rendered.location && (
+          {hasTopRight && (
             <div className={styles.entryLocation}>
-              {isLocationUrl ? (
+              {showLocations && isLocationUrl ? (
                 <a
                   href={formatContactUrl(rendered.location.trim())}
                   target="_blank"
@@ -111,16 +128,16 @@ export default function ResumeBlock({ blockId, blockType, sectionId, index, rend
                   {rendered.location}
                 </a>
               ) : (
-                rendered.location
+                topRightText
               )}
             </div>
           )}
         </div>
       )}
-      {(rendered.subtitle || rendered.dates) && (
+      {(rendered.subtitle || hasBottomRight) && (
         <div className={styles.entrySubHeader}>
           {rendered.subtitle && <div className={styles.entrySubtitle}>{rendered.subtitle}</div>}
-          {rendered.dates && <div className={styles.entryDates}>{rendered.dates}</div>}
+          {hasBottomRight && <div className={styles.entryDates}>{rendered.dates}</div>}
         </div>
       )}
       {rendered.body && (

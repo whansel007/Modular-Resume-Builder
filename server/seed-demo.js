@@ -55,7 +55,7 @@ const blocks = [
     company: 'Northwind Labs',
     role: 'Senior Full-Stack Engineer',
     location: 'Seattle, WA',
-    startDate: '2021',
+    startDate: 'Feb 2021',
     endDate: 'Present',
     description:
       'Own core features of a B2B SaaS platform serving 40k daily users. Built the billing service in Node.js and TypeScript on PostgreSQL, cut page load times 45% by reworking the React frontend, and led the move to GitHub Actions CI/CD with automated testing (Jest, Cypress). Mentor 3 junior engineers.',
@@ -67,8 +67,8 @@ const blocks = [
     company: 'Brightline Analytics',
     role: 'Data Engineer',
     location: 'Portland, OR',
-    startDate: '2018',
-    endDate: '2021',
+    startDate: 'Mar 2018',
+    endDate: 'Jan 2021',
     description:
       'Designed and maintained ETL pipelines in Python and Airflow ingesting 2TB/day into a cloud data warehouse. Introduced dbt for transformation testing, reducing data-quality incidents by 70%. Built Spark jobs for large-scale event processing and modeled dimensional schemas used by 30+ analysts.',
   },
@@ -79,8 +79,8 @@ const blocks = [
     company: 'Brightline Analytics',
     role: 'Engineering Team Lead',
     location: 'Portland, OR',
-    startDate: '2019',
-    endDate: '2021',
+    startDate: 'Jun 2019',
+    endDate: 'Jan 2021',
     description:
       'Led a team of 8 engineers across two squads while remaining hands-on. Ran sprint planning, roadmapping, and stakeholder reviews; hiring loop interviewer and onboarding owner. Delivery predictability rose from 60% to 92% over four quarters.',
   },
@@ -91,8 +91,8 @@ const blocks = [
     company: 'Studio Meridian',
     role: 'Frontend Developer',
     location: 'Portland, OR',
-    startDate: '2016',
-    endDate: '2018',
+    startDate: 'May 2016',
+    endDate: 'Feb 2018',
     description:
       'Built marketing and e-commerce sites for 20+ clients with JavaScript, React, and modern CSS. Championed accessibility audits (WCAG 2.1 AA) and introduced component-driven development with a shared design system.',
   },
@@ -105,8 +105,8 @@ const blocks = [
     institution: 'Cascadia State University',
     degree: 'Bachelor of Science',
     field: 'Computer Science',
-    startDate: '2012',
-    endDate: '2016',
+    startDate: 'Sep 2012',
+    endDate: 'Jun 2016',
     gpa: 'GPA 3.8 / 4.0 · Dean’s List, 6 quarters',
   },
   {
@@ -116,7 +116,7 @@ const blocks = [
     institution: 'Amazon Web Services',
     degree: 'Certification',
     field: 'Solutions Architect – Associate',
-    startDate: '2022',
+    startDate: 'Oct 2022',
     endDate: '',
     gpa: 'Credential ID: AWS-SAA-77219',
   },
@@ -176,7 +176,7 @@ const blocks = [
     company: 'LogStream Analytics Engine',
     link: 'https://github.com/jordanavery/logstream',
     location: '',
-    startDate: '2023',
+    startDate: 'Jan 2023',
     endDate: 'Present',
     description:
       'Open-source distributed log processor handling 50k events/sec. Implemented zero-copy JSON parsing in Rust with Node.js bindings; adopted by 15+ engineering teams.',
@@ -190,8 +190,8 @@ const blocks = [
     role: 'Co-Organizer & Technical Mentor',
     company: 'Pacific NW Student Hackathon',
     location: 'Seattle, WA',
-    startDate: '2020',
-    endDate: '2023',
+    startDate: 'Jan 2020',
+    endDate: 'May 2023',
     description:
       'Directed 48-hour annual hackathon for 350+ university and bootcamp students. Coordinated sponsorships with AWS and Microsoft; mentored 12 student finalist teams.',
   },
@@ -225,6 +225,7 @@ const resumes = [
       Education: ['demo-b8', 'demo-b9'],
       Skills: ['demo-b10', 'demo-b11', 'demo-b12', 'demo-b13'],
     },
+    showLocations: false,
   },
   {
     // Only a Summary — ideal for the AI autofill demo: paste a JD, extract
@@ -237,6 +238,7 @@ const resumes = [
     sections: {
       Summary: ['demo-b1'],
     },
+    showLocations: false,
   },
   {
     // Blank — shows the empty-state UI and manual building from scratch
@@ -256,6 +258,7 @@ const resumes = [
     },
     sectionOrder: [],
     sections: {},
+    showLocations: false,
   },
 ];
 

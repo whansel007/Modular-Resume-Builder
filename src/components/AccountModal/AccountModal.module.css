@@ -413,6 +413,91 @@
   cursor: wait;
 }
 
+/* ── Security & Danger sections ──────────────────────────────── */
+
+.securitySection {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.securityFields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pwBtn {
+  align-self: flex-start;
+  background: var(--panel);
+  color: var(--ink);
+}
+
+.pwActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pwLinkBtn {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--primary);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pwLinkBtn:hover {
+  color: var(--primary-deep);
+  transform: none;
+  box-shadow: none;
+}
+
+.pwLinkBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.dangerSection {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1.5px solid var(--danger, #dc2626);
+  border-radius: var(--radius);
+  background: rgba(220, 38, 38, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dangerHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.dangerBtn {
+  align-self: flex-start;
+  background: var(--danger, #dc2626);
+  color: #fff;
+  border-color: var(--ink);
+}
+
+.dangerBtn:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.dangerBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 /* ── Nested Link Modal ───────────────────────────────────────── */
 
 .linkModalOverlay {

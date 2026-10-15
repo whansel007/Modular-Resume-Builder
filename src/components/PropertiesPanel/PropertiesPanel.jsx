@@ -7,6 +7,7 @@ export default function PropertiesPanel({
   resume,
   personalInfo,
   onSetTemplate,
+  onToggleShowLocations,
   onUpdatePersonalInfo,
   onSaveDefaultPersonalInfo,
   saveDefaultStatus = '',
@@ -200,6 +201,18 @@ export default function PropertiesPanel({
                 </button>
               );
             })}
+          </div>
+
+          <div className={styles.templateOptionRow}>
+            <label className={styles.templateCheckboxLabel}>
+              <input
+                type="checkbox"
+                className={styles.templateCheckboxInput}
+                checked={!!resume.showLocations}
+                onChange={(e) => onToggleShowLocations?.(e.target.checked)}
+              />
+              <span className={styles.templateCheckboxText}>Show block locations</span>
+            </label>
           </div>
         </div>
 

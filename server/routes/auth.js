@@ -2,6 +2,14 @@ import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import {
+  generateResetCode,
+  hashResetCode,
+  codeMatches,
+  resetCodeExpiry,
+  sendResetCodeEmail,
+  MAX_RESET_ATTEMPTS,
+} from '../../api-lib/passwordReset.js';
 
 const router = Router();
 const SALT_ROUNDS = 10;
@@ -70,6 +78,73 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed' });
+  }
+});
+
+// POST /api/auth/forgot-password — email a reset code (always responds generically)
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ error: 'Email is required' });
+
+    const user = await User.findOne({ email: String(email).toLowerCase().trim() });
+    if (user) {
+      const code = generateResetCode();
+      user.resetCodeHash = hashResetCode(code);
+      user.resetCodeExpires = resetCodeExpiry();
+      user.resetCodeAttempts = 0;
+      await user.save();
+      try {
+        await sendResetCodeEmail(user.email, code, 'reset');
+      } catch (mailErr) {
+        console.error('Reset email failed:', mailErr);
+      }
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// POST /api/auth/reset-password — verify the code and set a new password
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body || {};
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ error: 'Email, code, and new password are required' });
+    }
+    if (String(newPassword).length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+    }
+
+    const user = await User.findOne({ email: String(email).toLowerCase().trim() });
+    if (!user || !user.resetCodeHash || !user.resetCodeExpires) {
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+    if (
+      user.resetCodeExpires.getTime() < Date.now() ||
+      (user.resetCodeAttempts || 0) >= MAX_RESET_ATTEMPTS
+    ) {
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+    if (!codeMatches(user.resetCodeHash, code)) {
+      user.resetCodeAttempts = (user.resetCodeAttempts || 0) + 1;
+      await user.save();
+      return res.status(400).json({ error: 'Invalid or expired code' });
+    }
+
+    user.passwordHash = await bcrypt.hash(String(newPassword), SALT_ROUNDS);
+    user.resetCodeHash = null;
+    user.resetCodeExpires = null;
+    user.resetCodeAttempts = 0;
+    await user.save();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

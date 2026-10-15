@@ -495,6 +495,40 @@ export default function Dashboard() {
     invalidatePrefetch('defaults');
   };
 
+  const requestPasswordCode = async () => {
+    const res = await fetch('/api/user/password', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to send confirmation email');
+  };
+
+  const confirmPassword = async ({ code, newPassword }) => {
+    const res = await fetch('/api/user/password', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ code, newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to change password');
+  };
+
+  const deleteAccount = async (password) => {
+    const res = await fetch('/api/user/account', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || 'Failed to delete account');
+    localStorage.removeItem('auth-token');
+    localStorage.removeItem('auth-user');
+    invalidatePrefetch();
+    setUser(null);
+    navigate('/');
+  };
+
   // ---------- Resume CRUD ----------
 
   // Persist a parsed PDF import: bulk-create the blocks, assemble them
@@ -506,11 +540,11 @@ export default function Dashboard() {
       const SECTION_TITLE = {
         summary: 'Summary',
         experience: 'Experience',
-        projects: 'Projects',
-        activities: 'Activities',
-        cca: 'Activities',
+        projects: 'Projects Experience',
+        activities: 'Co-Curricular Activities',
+        cca: 'Co-Curricular Activities',
         education: 'Education',
-        skills: 'Skills',
+        skills: 'Skills and Interest',
       };
       const docs = [];
       const sections = {};
@@ -565,6 +599,7 @@ export default function Dashboard() {
           sections,
           sectionOrder,
           hiddenSections,
+          showLocations: false,
         }),
       });
       if (!res.ok) throw new Error('Failed to create resume');
@@ -1090,6 +1125,9 @@ export default function Dashboard() {
           userEmail={user?.email}
           initial={defaultInfo}
           onSave={saveDefaultInfo}
+          onRequestPasswordCode={requestPasswordCode}
+          onConfirmPassword={confirmPassword}
+          onDeleteAccount={deleteAccount}
           onClose={() => setAccountModalOpen(false)}
         />
       )}

@@ -17,7 +17,7 @@ export default async function handler(req, res) {
     }
 
     if (req.method === 'POST') {
-      const { id, title, templateId, personalInfo, sectionOrder, sections, hiddenSections } = req.body;
+      const { id, title, templateId, personalInfo, sectionOrder, sections, hiddenSections, showLocations } = req.body;
       
       // Check if resume exists and verify ownership
       const existingResume = await Resume.findById(id);
@@ -28,7 +28,7 @@ export default async function handler(req, res) {
       // Force owner to be the authenticated user's email
       const resume = await Resume.findByIdAndUpdate(
         id,
-        { _id: id, owner: user.email, title, templateId, personalInfo, sectionOrder, sections, hiddenSections: hiddenSections || [] },
+        { _id: id, owner: user.email, title, templateId, personalInfo, sectionOrder, sections, hiddenSections: hiddenSections || [], showLocations: !!showLocations },
         { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
       );
       return res.status(201).json(resume);

@@ -301,6 +301,7 @@ export default function ResumeCanvas({
                       sectionId={sectionTitle}
                       index={idx}
                       rendered={rendered}
+                      showLocations={!!resume.showLocations}
                       variantKind={block.variantIn ? 'resume' : block.variantOf ? 'child' : null}
                       onRemove={() => onRemoveBlockFromSection(sectionTitle, idx)}
                       onEdit={() => onEditBlock(blockId)}

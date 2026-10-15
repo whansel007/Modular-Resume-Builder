@@ -1,6 +1,17 @@
+import bcrypt from 'bcrypt';
 import { connectToDatabase } from '../../api-lib/db.js';
 import User from '../../api-lib/models/User.js';
+import Block from '../../api-lib/models/Block.js';
+import Resume from '../../api-lib/models/Resume.js';
 import { requireAuth } from '../../api-lib/auth.js';
+import {
+  generateResetCode,
+  hashResetCode,
+  codeMatches,
+  resetCodeExpiry,
+  sendResetCodeEmail,
+  MAX_RESET_ATTEMPTS,
+} from '../../api-lib/passwordReset.js';
 
 const DEFAULT_SUGGESTIONS = ['Email', 'Phone', 'LinkedIn', 'GitHub', 'Portfolio', 'Website', 'Location', 'Twitter'];
 
@@ -158,6 +169,100 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     } catch (err) {
       console.error('Tags handler error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  if (action === 'password') {
+    try {
+      const authUser = requireAuth(req, res);
+      if (!authUser) return;
+
+      await connectToDatabase();
+
+      const user = await User.findOne({ email: authUser.email });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      // POST — email a confirmation code to the account owner.
+      if (req.method === 'POST') {
+        const code = generateResetCode();
+        user.resetCodeHash = hashResetCode(code);
+        user.resetCodeExpires = resetCodeExpiry();
+        user.resetCodeAttempts = 0;
+        await user.save();
+        try {
+          await sendResetCodeEmail(user.email, code, 'change');
+        } catch (mailErr) {
+          console.error('Change-password email failed:', mailErr);
+          return res.status(500).json({ error: 'Failed to send confirmation email' });
+        }
+        return res.json({ success: true });
+      }
+
+      // PUT — confirm with the emailed code and set the new password.
+      if (req.method === 'PUT') {
+        const { code, newPassword } = req.body || {};
+        if (!code || !newPassword) {
+          return res.status(400).json({ error: 'Code and new password are required' });
+        }
+        if (String(newPassword).length < 8) {
+          return res.status(400).json({ error: 'New password must be at least 8 characters long' });
+        }
+        if (
+          !user.resetCodeHash ||
+          !user.resetCodeExpires ||
+          user.resetCodeExpires.getTime() < Date.now() ||
+          (user.resetCodeAttempts || 0) >= MAX_RESET_ATTEMPTS
+        ) {
+          return res.status(400).json({ error: 'Invalid or expired code' });
+        }
+        if (!codeMatches(user.resetCodeHash, code)) {
+          user.resetCodeAttempts = (user.resetCodeAttempts || 0) + 1;
+          await user.save();
+          return res.status(400).json({ error: 'Invalid or expired code' });
+        }
+
+        user.passwordHash = await bcrypt.hash(String(newPassword), 10);
+        user.resetCodeHash = null;
+        user.resetCodeExpires = null;
+        user.resetCodeAttempts = 0;
+        await user.save();
+        return res.json({ success: true });
+      }
+
+      return res.status(405).json({ error: 'Method not allowed' });
+    } catch (err) {
+      console.error('Change password handler error:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+
+  if (action === 'account') {
+    try {
+      const authUser = requireAuth(req, res);
+      if (!authUser) return;
+
+      if (req.method !== 'DELETE') {
+        return res.status(405).json({ error: 'Method not allowed' });
+      }
+
+      await connectToDatabase();
+
+      const password = (req.body && req.body.password) || req.query.password;
+      const user = await User.findOne({ email: authUser.email });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      const valid = await bcrypt.compare(String(password || ''), user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ error: 'Password is incorrect' });
+      }
+
+      await Resume.deleteMany({ owner: authUser.email });
+      await Block.deleteMany({ owner: authUser.email });
+      await User.deleteOne({ email: authUser.email });
+      return res.json({ success: true });
+    } catch (err) {
+      console.error('Delete account handler error:', err);
       return res.status(500).json({ error: 'Internal server error' });
     }
   }

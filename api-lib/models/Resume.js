@@ -10,6 +10,7 @@ const resumeSchema = new mongoose.Schema(
     sectionOrder: { type: [String], default: [] },
     sections: { type: mongoose.Schema.Types.Mixed, default: {} },
     hiddenSections: { type: [String], default: [] },
+    showLocations: { type: Boolean, default: false },
   },
   { timestamps: true },
 );

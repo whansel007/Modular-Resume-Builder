@@ -71,6 +71,9 @@ export default function Login() {
           Don't have an account? <Link to="/register">Register</Link>
         </p>
         <p className={styles.footer}>
+          <Link to="/forgot-password">Forgot password?</Link>
+        </p>
+        <p className={styles.footer}>
           <Link to="/">Back to Home</Link>
         </p>
       </div>
