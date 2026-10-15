@@ -194,7 +194,7 @@ export default function ResumeCanvas({
 
             return (
               <div
-                key={sectionTitle || sectionIdx}
+                key={`sec-${sectionIdx}`}
                 className={`
                   ${styles.resumeSection}
                   ${dragOverSection === sectionTitle ? styles.dragOver : ''}
@@ -227,7 +227,7 @@ export default function ResumeCanvas({
                     <input
                       className={styles.sectionTitle}
                       value={sectionTitle}
-                      onChange={(e) => onUpdateSectionTitle(sectionTitle, e.target.value)}
+                      onChange={(e) => onUpdateSectionTitle(sectionTitle, e.target.value, sectionIdx)}
                       data-print-hide
                     />
                   </div>

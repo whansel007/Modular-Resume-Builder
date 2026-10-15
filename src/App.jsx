@@ -722,18 +722,38 @@ export default function App() {
     });
   }, [setResume]);
 
-  const updateSectionTitle = useCallback((oldTitle, newTitle) => {
+  const updateSectionTitle = useCallback((oldTitle, newTitle, sectionIdx) => {
     if (oldTitle === newTitle) return;
     setResume((prev) => {
+      const order = [...(prev.sectionOrder || [])];
+      const targetIdx = typeof sectionIdx === 'number' ? sectionIdx : order.indexOf(oldTitle);
+      const actualOldTitle = targetIdx >= 0 && order[targetIdx] !== undefined ? order[targetIdx] : oldTitle;
+
+      if (targetIdx >= 0 && targetIdx < order.length) {
+        order[targetIdx] = newTitle;
+      } else {
+        const idx = order.indexOf(oldTitle);
+        if (idx >= 0) order[idx] = newTitle;
+      }
+
       const newSections = {};
-      for (const key of Object.keys(prev.sections || {})) {
-        newSections[key === oldTitle ? newTitle : key] = prev.sections[key];
+      let matched = false;
+      for (const [key, val] of Object.entries(prev.sections || {})) {
+        if (key === actualOldTitle && !matched) {
+          newSections[newTitle] = val;
+          matched = true;
+        } else {
+          newSections[key] = val;
+        }
+      }
+      if (!matched) {
+        newSections[newTitle] = prev.sections?.[actualOldTitle] || [];
       }
       return {
         ...prev,
-        sectionOrder: (prev.sectionOrder || []).map((t) => (t === oldTitle ? newTitle : t)),
+        sectionOrder: order,
         sections: newSections,
-        hiddenSections: (prev.hiddenSections || []).map((t) => (t === oldTitle ? newTitle : t)),
+        hiddenSections: (prev.hiddenSections || []).map((t) => (t === actualOldTitle ? newTitle : t)),
       };
     });
   }, [setResume]);

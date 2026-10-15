@@ -242,7 +242,7 @@ export default function PropertiesPanel({
 
                 return (
                   <div
-                    key={title || idx}
+                    key={`sec-${idx}`}
                     className={`
                       ${styles.sectionItemCard}
                       ${draggedSecIdx === idx ? styles.dragging : ''}
@@ -349,7 +349,7 @@ export default function PropertiesPanel({
             <label className={styles.subLabel}>Contact & Details ({fields.length})</label>
             {fields.map((f, idx) => (
               <div
-                key={f.id || idx}
+                key={f.id || `f-${idx}`}
                 className={`${styles.fieldCard} ${draggedIdx === idx ? styles.dragging : ''} ${dragOverIdx === idx && draggedIdx !== idx ? styles.dragOver : ''}`}
                 draggable
                 onDragStart={(e) => handleDragStart(e, idx)}

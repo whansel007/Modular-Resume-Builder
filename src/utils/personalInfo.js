@@ -109,8 +109,8 @@ export function normalizePersonalInfo(info) {
 
   if (Array.isArray(info.fields) && info.fields.length > 0) {
     fields = info.fields.map((f, idx) => ({
-      id: f.id || `f-${idx + 1}-${Date.now()}`,
-      label: typeof f.label === 'string' && f.label.trim() ? f.label : `Field ${idx + 1}`,
+      id: f.id || `f-${idx + 1}`,
+      label: typeof f.label === 'string' ? f.label : `Field ${idx + 1}`,
       value: typeof f.value === 'string' ? f.value : '',
       url: typeof f.url === 'string' ? f.url.trim() : (typeof f.link === 'string' ? f.link.trim() : ''),
     }));
@@ -132,7 +132,7 @@ export function normalizePersonalInfo(info) {
       DEFAULT_FIELD_SUGGESTIONS.find((l) => !existingLabels.has(l.toLowerCase())) ||
       `Field ${fields.length + 1}`;
     fields.push({
-      id: `f-${fields.length + 1}-${Date.now()}`,
+      id: `f-${fields.length + 1}`,
       label: nextLabel,
       value: '',
       url: '',
